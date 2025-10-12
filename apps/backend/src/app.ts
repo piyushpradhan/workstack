@@ -1,17 +1,38 @@
-import type { FastifyInstance, FastifyPluginOptions } from 'fastify'
-import fp from 'fastify-plugin'
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import type { FastifyServerOptions, FastifyInstance } from "fastify";
+import fastify from "fastify";
 
-export default fp(async function (fastify: FastifyInstance, opts: FastifyPluginOptions) {
-  // Register middleware
-  await fastify.register(import('./middleware/error-handler.js'))
-  await fastify.register(import('./middleware/request-logger.js'))
+import autoload from "@fastify/autoload";
+import helmet from "@fastify/helmet";
 
-  // Register plugins
-  await fastify.register(import('./plugins/cors.js'))
-  await fastify.register(import('./plugins/helmet.js'))
-  await fastify.register(import('./plugins/rate-limit.js'))
-  await fastify.register(import('./plugins/swagger.js'))
+import services from "./services/index.js";
+import controllers from "./controllers/index.js";
+import rootRoutes from "./routes/root.js";
+import authRoutes from "./routes/auth/index.js";
 
-  // Register routes
-  await fastify.register(import('./routes/index.js'))
-})
+const dir = dirname(fileURLToPath(import.meta.url));
+
+const build = (opts: FastifyServerOptions) => {
+  const app: FastifyInstance = fastify(opts);
+
+  app.register(helmet);
+
+  app.register(autoload, {
+    dir: join(dir, 'plugins')
+  })
+
+  app.register(services);
+  app.register(controllers);
+
+  // Register routes manually instead of using autoload
+  console.log('Registering root routes...')
+  app.register(rootRoutes)
+  console.log('Registering auth routes...')
+  app.register(authRoutes, { prefix: '/auth' })
+  console.log('Routes registered successfully')
+
+  return app;
+}
+
+export default build;

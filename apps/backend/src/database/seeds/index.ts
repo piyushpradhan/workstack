@@ -13,8 +13,9 @@ async function main() {
       create: {
         email: 'admin@workstack.com',
         name: 'Admin User',
-        role: 'admin',
-        isActive: true
+        role: 'ADMIN',
+        isActive: true,
+        password: 'admin123'
       }
     }),
     prisma.user.upsert({
@@ -23,8 +24,9 @@ async function main() {
       create: {
         email: 'user@workstack.com',
         name: 'Regular User',
-        role: 'user',
-        isActive: true
+        role: 'MEMBER',
+        isActive: true,
+        password: 'user123'
       }
     })
   ])
@@ -38,6 +40,8 @@ main()
     console.error('Error during seeding:', e)
     process.exit(1)
   })
-  .finally(async () => {
-    await prisma.$disconnect()
+  .finally(() => {
+    prisma.$disconnect().then(() => {
+      console.log("Disconnected from Prisma");
+    }).catch((err) => console.error("Error disconnecting from Prisma: ", err));
   })

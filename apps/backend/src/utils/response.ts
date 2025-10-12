@@ -1,5 +1,5 @@
-import { FastifyReply } from 'fastify'
-import { ApiResponse } from '../types/api.js'
+import type { FastifyReply } from 'fastify'
+import type { ApiResponse } from '../types/api.js'
 
 export class ResponseHelper {
   static success<T>(reply: FastifyReply, data: T, message?: string, statusCode = 200): void {

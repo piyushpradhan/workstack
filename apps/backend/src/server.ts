@@ -1,9 +1,9 @@
-import Fastify from 'fastify'
 import closeWithGrace from 'close-with-grace'
+import { type TypeBoxTypeProvider } from '@fastify/type-provider-typebox'
 import { config } from './config/index.js'
-import serviceApp from './app.js'
+import build from './app.js'
 
-function getLoggerOptions () {
+function getLoggerOptions() {
   if (process.stdout.isTTY) {
     return {
       level: config.LOG_LEVEL,
@@ -20,20 +20,19 @@ function getLoggerOptions () {
   return { level: config.LOG_LEVEL }
 }
 
-const app = Fastify({
+const app = build({
+  trustProxy: true,
+  ignoreTrailingSlash: true,
   logger: getLoggerOptions(),
   ajv: {
     customOptions: {
       coerceTypes: 'array',
-      removeAdditional: 'all'
+      removeAdditional: false
     }
   }
-})
+}).withTypeProvider<TypeBoxTypeProvider>()
 
-async function init () {
-  // Register the main application
-  await app.register(serviceApp)
-
+async function init() {
   closeWithGrace(
     { delay: 500 },
     async ({ err }) => {
@@ -47,9 +46,9 @@ async function init () {
   await app.ready()
 
   try {
-    await app.listen({ 
-      port: config.PORT, 
-      host: config.HOST 
+    await app.listen({
+      port: config.PORT,
+      host: config.HOST
     })
     app.log.info(`Server listening on http://${config.HOST}:${config.PORT}`)
   } catch (err) {

@@ -1,7 +1,7 @@
-import { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyRequest } from 'fastify'
 
 export class LoggerHelper {
-  static logRequest(fastify: FastifyInstance, request: any, message: string): void {
+  static logRequest(fastify: FastifyInstance, request: FastifyRequest, message: string): void {
     fastify.log.info({
       method: request.method,
       url: request.url,

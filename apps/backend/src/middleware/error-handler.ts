@@ -1,9 +1,9 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyInstance, FastifyRequest, FastifyReply, FastifyError } from 'fastify'
 import fp from 'fastify-plugin'
-import { ErrorResponse } from '../types/api.js'
+import type { ErrorResponse } from '../types/api.js'
 
-export default fp(async function (fastify: FastifyInstance) {
-  fastify.setErrorHandler((err: any, request: FastifyRequest, reply: FastifyReply) => {
+export default fp(async function(fastify: FastifyInstance) {
+  fastify.setErrorHandler((err: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
     fastify.log.error({
       err,
       request: {
