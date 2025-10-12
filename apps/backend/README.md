@@ -47,37 +47,42 @@ src/
 ## 🚀 Fastify Best Practices Implementation
 
 ### 1. **Plugin-Based Architecture**
+
 - **Everything is a plugin**: Routes, middleware, and utilities are all Fastify plugins
 - **Encapsulation**: Each plugin is self-contained and can be easily tested or reused
 - **Dependency injection**: Plugins can register dependencies that other plugins can use
 
 ### 2. **Route Handlers as Plugins**
+
 ```typescript
 // Each route file is a Fastify plugin
 export default fp(async function (fastify: FastifyInstance) {
   fastify.get('/users', async (request, reply) => {
     // Business logic directly in route handlers
     // No unnecessary abstraction layers
-  })
-})
+  });
+});
 ```
 
 ### 3. **Middleware as Plugins**
+
 ```typescript
 // Middleware are proper Fastify plugins
 export default fp(async function (fastify: FastifyInstance) {
   fastify.addHook('onRequest', async (request, reply) => {
     // Middleware logic
-  })
-})
+  });
+});
 ```
 
 ### 4. **Simplified Configuration**
+
 - **Single config file**: No over-engineering with multiple config files
 - **Environment-based**: Simple environment variable handling
 - **Type-safe**: TypeScript ensures configuration correctness
 
 ### 5. **Direct Database Access**
+
 - **No repository pattern**: Direct Prisma usage in route handlers
 - **Simpler code**: Less abstraction means easier to understand and maintain
 - **Better performance**: Fewer function calls and object instantiations
@@ -104,24 +109,27 @@ export default fp(async function (fastify: FastifyInstance) {
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - PostgreSQL database
 - pnpm (recommended) or npm
 
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 2. Set up environment variables:
+
 ```bash
 cp .env.example .env
 # Edit .env with your database URL and other configurations
 ```
 
 3. Set up the database:
+
 ```bash
 # Generate Prisma client
 pnpm run db:generate
@@ -134,6 +142,7 @@ pnpm run db:seed
 ```
 
 4. Start the development server:
+
 ```bash
 pnpm run dev
 ```
@@ -176,26 +185,31 @@ Once the server is running, visit `/docs` to view the interactive API documentat
 ## 🏛️ Architecture Patterns
 
 ### Repository Pattern
+
 - Data access is abstracted through repository classes
 - Base repository provides common CRUD operations
 - Easy to mock for testing
 
 ### Service Layer
+
 - Business logic is separated from controllers
 - Services interact with repositories
 - Controllers handle HTTP concerns only
 
 ### Middleware Pattern
+
 - Reusable middleware for cross-cutting concerns
 - Error handling, logging, authentication, etc.
 
 ### Plugin Architecture
+
 - Fastify plugins for modular functionality
 - Easy to enable/disable features
 
 ## 🧪 Testing
 
 The project includes a test setup with:
+
 - Test configuration in `test/tsconfig.json`
 - Coverage reporting with c8
 - Test runner with tsx
@@ -203,12 +217,14 @@ The project includes a test setup with:
 ## 📦 Dependencies
 
 ### Core Dependencies
+
 - **Fastify** - Fast and low overhead web framework
 - **TypeScript** - Type safety and better developer experience
 - **Prisma** - Modern database ORM
 - **TypeBox** - JSON Schema type builder
 
 ### Development Dependencies
+
 - **ESLint** - Code linting
 - **tsx** - TypeScript execution
 - **c8** - Code coverage
@@ -218,6 +234,7 @@ The project includes a test setup with:
 The application uses Prisma as the ORM with PostgreSQL as the database.
 
 ### Key Features
+
 - Type-safe database queries
 - Automatic migrations
 - Database seeding
@@ -234,6 +251,7 @@ The application uses Prisma as the ORM with PostgreSQL as the database.
 ## 🚀 Deployment
 
 The application is ready for deployment with:
+
 - Production-optimized build
 - Environment-based configuration
 - Health check endpoints

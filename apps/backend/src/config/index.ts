@@ -1,7 +1,7 @@
 export enum TokenTypes {
   ACCESS = 'access',
   VERIFY_EMAIL = 'verify_email',
-  RESET_PASSWORD = 'reset_password'
+  RESET_PASSWORD = 'reset_password',
 }
 
 export const config = {
@@ -12,20 +12,28 @@ export const config = {
   LOG_LEVEL: process.env.LOG_LEVEL ?? 'info',
   CORS_ORIGIN: process.env.CORS_ORIGIN ?? 'http://localhost:3000',
   RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX ?? '100'),
-  RATE_LIMIT_TIME_WINDOW: parseInt(process.env.RATE_LIMIT_TIME_WINDOW ?? '60000'),
+  RATE_LIMIT_TIME_WINDOW: parseInt(
+    process.env.RATE_LIMIT_TIME_WINDOW ?? '60000',
+  ),
 
-  KEYS: (process.env.APP_KEYS ?? "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=").split(',').map((key) => Buffer.from(key, 'base64')),
+  KEYS: (process.env.APP_KEYS ?? 'YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=')
+    .split(',')
+    .map((key) => Buffer.from(key, 'base64')),
 
   // JWT Configuration
-  JWT_SECRET: process.env.JWT_SECRET ?? "super-secret-key-change-in-production",
+  JWT_SECRET: process.env.JWT_SECRET ?? 'super-secret-key-change-in-production',
   JWT_EXPIRY: parseInt(process.env.JWT_EXPIRY ?? '604800000'),
   JWT_REFRESH_EXPIRY: parseInt(process.env.JWT_REFRESH_EXPIRY ?? '2592000000'),
 
-  RESET_PASSWORD_EXPIRY: parseInt(process.env.RESET_PASSWORD_EXPIRY ?? '900000'),
+  RESET_PASSWORD_EXPIRY: parseInt(
+    process.env.RESET_PASSWORD_EXPIRY ?? '900000',
+  ),
 
   // Session Configuration
   SESSION_EXPIRY: parseInt(process.env.SESSION_EXPIRY ?? '604800000'), // 7 days in ms
-  REFRESH_TOKEN_EXPIRY: parseInt(process.env.REFRESH_TOKEN_EXPIRY ?? '2592000000'), // 30 days in ms
+  REFRESH_TOKEN_EXPIRY: parseInt(
+    process.env.REFRESH_TOKEN_EXPIRY ?? '2592000000',
+  ), // 30 days in ms
 
   // Security Configuration
   BCRYPT_ROUNDS: parseInt(process.env.BCRYPT_ROUNDS ?? '12'),
@@ -43,10 +51,10 @@ export const config = {
   APP_ENV: process.env.APP_ENV ?? 'development',
   APP_NAME: process.env.APP_NAME ?? 'WorkStack',
   APP_URL: process.env.APP_URL ?? 'http://localhost:3000',
-}
+};
 
 export const COOKIES = {
   PAYLOAD: `${config.APP_NAME}_user`,
   HEADER_SIGNATURE: `${config.APP_NAME}_token`,
-  SESSION: `${config.APP_NAME}_session`
-}
+  SESSION: `${config.APP_NAME}_session`,
+};

@@ -4,9 +4,5 @@
     "baseUrl": ".",
     "noEmit": false
   },
-  "include": [
-    "@types",
-    "../src/**/*.ts",
-    "**/*.ts"
-  ]
+  "include": ["@types", "../src/**/*.ts", "**/*.ts"]
 }
