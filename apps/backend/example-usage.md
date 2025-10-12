@@ -15,6 +15,7 @@ curl -X POST http://localhost:3000/api/v1/auth/signup \
 ```
 
 **Response:**
+
 ```json
 {
   "user": {
@@ -76,43 +77,43 @@ curl -X POST http://localhost:3000/api/v1/auth/signout \
 // auth.service.ts
 class AuthService {
   private baseURL = 'http://localhost:3000/api/v1/auth';
-  
+
   async signup(email: string, password: string, name?: string) {
     const response = await fetch(`${this.baseURL}/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, name })
+      body: JSON.stringify({ email, password, name }),
     });
-    
+
     if (!response.ok) throw new Error('Signup failed');
-    
+
     const data = await response.json();
     this.storeTokens(data.accessToken, data.refreshToken);
     return data.user;
   }
-  
+
   async signin(email: string, password: string) {
     const response = await fetch(`${this.baseURL}/signin`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
     });
-    
+
     if (!response.ok) throw new Error('Signin failed');
-    
+
     const data = await response.json();
     this.storeTokens(data.accessToken, data.refreshToken);
     return data.user;
   }
-  
+
   async getCurrentUser() {
     const token = this.getAccessToken();
     if (!token) return null;
-    
+
     const response = await fetch(`${this.baseURL}/me`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     });
-    
+
     if (!response.ok) {
       if (response.status === 401) {
         await this.refreshToken();
@@ -120,52 +121,52 @@ class AuthService {
       }
       throw new Error('Failed to get user');
     }
-    
+
     return response.json();
   }
-  
+
   async refreshToken() {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) throw new Error('No refresh token');
-    
+
     const response = await fetch(`${this.baseURL}/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken })
+      body: JSON.stringify({ refreshToken }),
     });
-    
+
     if (!response.ok) throw new Error('Token refresh failed');
-    
+
     const data = await response.json();
     this.storeTokens(data.accessToken, data.refreshToken);
     return data.accessToken;
   }
-  
+
   async signout() {
     const token = this.getAccessToken();
     if (token) {
       await fetch(`${this.baseURL}/signout`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
     }
-    
+
     this.clearTokens();
   }
-  
+
   private storeTokens(accessToken: string, refreshToken: string) {
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
   }
-  
+
   private getAccessToken(): string | null {
     return localStorage.getItem('accessToken');
   }
-  
+
   private getRefreshToken(): string | null {
     return localStorage.getItem('refreshToken');
   }
-  
+
   private clearTokens() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
@@ -179,44 +180,60 @@ export const authService = new AuthService();
 
 ```typescript
 // Example: Admin-only route
-fastify.get('/admin/dashboard', {
-  preHandler: [fastify.authenticate, fastify.adminOnly]
-}, async (request, reply) => {
-  // Only admins can access this
-  reply.send({ message: 'Admin dashboard data' });
-});
+fastify.get(
+  '/admin/dashboard',
+  {
+    preHandler: [fastify.authenticate, fastify.adminOnly],
+  },
+  async (request, reply) => {
+    // Only admins can access this
+    reply.send({ message: 'Admin dashboard data' });
+  },
+);
 
 // Example: User can only access their own data
-fastify.get('/users/:userId/profile', {
-  preHandler: [fastify.authenticate, fastify.requireOwnership('userId')]
-}, async (request, reply) => {
-  // User can only access their own profile
-  const user = await fastify.db.user.findUnique({
-    where: { id: request.params.userId }
-  });
-  reply.send({ user });
-});
+fastify.get(
+  '/users/:userId/profile',
+  {
+    preHandler: [fastify.authenticate, fastify.requireOwnership('userId')],
+  },
+  async (request, reply) => {
+    // User can only access their own profile
+    const user = await fastify.db.user.findUnique({
+      where: { id: request.params.userId },
+    });
+    reply.send({ user });
+  },
+);
 
 // Example: Manager or Admin access
-fastify.get('/management/reports', {
-  preHandler: [fastify.authenticate, fastify.managerOrAdmin]
-}, async (request, reply) => {
-  // Managers and admins can access
-  reply.send({ reports: [] });
-});
+fastify.get(
+  '/management/reports',
+  {
+    preHandler: [fastify.authenticate, fastify.managerOrAdmin],
+  },
+  async (request, reply) => {
+    // Managers and admins can access
+    reply.send({ reports: [] });
+  },
+);
 
 // Example: Optional authentication
-fastify.get('/public/content', {
-  preHandler: [fastify.optionalAuth]
-}, async (request, reply) => {
-  // Works for both authenticated and anonymous users
-  const isAuthenticated = !!request.user;
-  reply.send({ 
-    content: 'Public content',
-    isAuthenticated,
-    user: request.user 
-  });
-});
+fastify.get(
+  '/public/content',
+  {
+    preHandler: [fastify.optionalAuth],
+  },
+  async (request, reply) => {
+    // Works for both authenticated and anonymous users
+    const isAuthenticated = !!request.user;
+    reply.send({
+      content: 'Public content',
+      isAuthenticated,
+      user: request.user,
+    });
+  },
+);
 ```
 
 ## Environment Variables Setup

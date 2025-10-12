@@ -5,6 +5,7 @@ This document describes the comprehensive authentication system implemented for 
 ## Features
 
 ### 🔐 Core Authentication
+
 - **JWT-based authentication** with configurable expiration
 - **Refresh token system** for seamless token renewal
 - **Multiple session support** - users can be logged in from multiple devices
@@ -13,6 +14,7 @@ This document describes the comprehensive authentication system implemented for 
 - **Role-based access control** (RBAC) with Admin, Manager, Member, Viewer roles
 
 ### 🛡️ Security Features
+
 - **Rate limiting** on all authentication endpoints
 - **Input validation and sanitization** to prevent injection attacks
 - **CSRF protection** for web-based requests
@@ -23,6 +25,7 @@ This document describes the comprehensive authentication system implemented for 
 - **Audit logging** for security events
 
 ### 📊 Session Management
+
 - **Multiple concurrent sessions** per user
 - **Session tracking** with IP address and User-Agent
 - **Session expiration** with automatic cleanup
@@ -32,6 +35,7 @@ This document describes the comprehensive authentication system implemented for 
 ## Database Schema
 
 ### User Model
+
 ```prisma
 model User {
   id                    String   @id @default(uuid())
@@ -47,13 +51,14 @@ model User {
   emailVerifiedAt       DateTime?
   passwordResetToken    String?
   passwordResetExpires  DateTime?
-  
+
   sessions      Session[]
   refreshTokens RefreshToken[]
 }
 ```
 
 ### Session Model
+
 ```prisma
 model Session {
   id        String   @id @default(uuid())
@@ -65,12 +70,13 @@ model Session {
   expiresAt DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 ```
 
 ### RefreshToken Model
+
 ```prisma
 model RefreshToken {
   id        String   @id @default(uuid())
@@ -82,7 +88,7 @@ model RefreshToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 ```
@@ -92,9 +98,11 @@ model RefreshToken {
 ### Authentication Endpoints
 
 #### POST `/api/v1/auth/signup`
+
 Register a new user account.
 
 **Request:**
+
 ```json
 {
   "email": "user@example.com",
@@ -104,6 +112,7 @@ Register a new user account.
 ```
 
 **Response:**
+
 ```json
 {
   "user": {
@@ -118,9 +127,11 @@ Register a new user account.
 ```
 
 #### POST `/api/v1/auth/signin`
+
 Sign in with email and password.
 
 **Request:**
+
 ```json
 {
   "email": "user@example.com",
@@ -129,6 +140,7 @@ Sign in with email and password.
 ```
 
 **Response:**
+
 ```json
 {
   "user": {
@@ -143,9 +155,11 @@ Sign in with email and password.
 ```
 
 #### POST `/api/v1/auth/refresh`
+
 Refresh access token using refresh token.
 
 **Request:**
+
 ```json
 {
   "refreshToken": "refresh_token"
@@ -153,6 +167,7 @@ Refresh access token using refresh token.
 ```
 
 **Response:**
+
 ```json
 {
   "accessToken": "new_jwt_token",
@@ -161,11 +176,13 @@ Refresh access token using refresh token.
 ```
 
 #### POST `/api/v1/auth/signout`
+
 Sign out from current session.
 
 **Headers:** `Authorization: Bearer <access_token>`
 
 **Response:**
+
 ```json
 {
   "message": "Successfully signed out"
@@ -173,11 +190,13 @@ Sign out from current session.
 ```
 
 #### POST `/api/v1/auth/signout-all`
+
 Sign out from all devices.
 
 **Headers:** `Authorization: Bearer <access_token>`
 
 **Response:**
+
 ```json
 {
   "message": "Successfully signed out from all devices"
@@ -187,11 +206,13 @@ Sign out from all devices.
 ### Session Management
 
 #### GET `/api/v1/auth/sessions`
+
 Get all active sessions for the current user.
 
 **Headers:** `Authorization: Bearer <access_token>`
 
 **Response:**
+
 ```json
 {
   "sessions": [
@@ -208,11 +229,13 @@ Get all active sessions for the current user.
 ```
 
 #### DELETE `/api/v1/auth/sessions/:sessionId`
+
 Revoke a specific session.
 
 **Headers:** `Authorization: Bearer <access_token>`
 
 **Response:**
+
 ```json
 {
   "message": "Session revoked successfully"
@@ -222,9 +245,11 @@ Revoke a specific session.
 ### Password Management
 
 #### POST `/api/v1/auth/forgot-password`
+
 Request password reset.
 
 **Request:**
+
 ```json
 {
   "email": "user@example.com"
@@ -232,6 +257,7 @@ Request password reset.
 ```
 
 **Response:**
+
 ```json
 {
   "message": "If the email exists, a password reset link has been sent."
@@ -239,9 +265,11 @@ Request password reset.
 ```
 
 #### POST `/api/v1/auth/reset-password`
+
 Reset password with token.
 
 **Request:**
+
 ```json
 {
   "token": "reset_token",
@@ -250,6 +278,7 @@ Reset password with token.
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Password reset successfully. Please sign in with your new password."
@@ -257,11 +286,13 @@ Reset password with token.
 ```
 
 #### POST `/api/v1/auth/change-password`
+
 Change password (authenticated user).
 
 **Headers:** `Authorization: Bearer <access_token>`
 
 **Request:**
+
 ```json
 {
   "currentPassword": "OldPass123!",
@@ -270,6 +301,7 @@ Change password (authenticated user).
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Password changed successfully. Please sign in again."
@@ -279,11 +311,13 @@ Change password (authenticated user).
 ### User Profile
 
 #### GET `/api/v1/auth/me`
+
 Get current user profile.
 
 **Headers:** `Authorization: Bearer <access_token>`
 
 **Response:**
+
 ```json
 {
   "user": {
@@ -304,71 +338,107 @@ Get current user profile.
 
 ```typescript
 // Require authentication
-fastify.get('/protected', {
-  preHandler: [fastify.authenticate]
-}, async (request, reply) => {
-  // request.user is available here
-});
+fastify.get(
+  '/protected',
+  {
+    preHandler: [fastify.authenticate],
+  },
+  async (request, reply) => {
+    // request.user is available here
+  },
+);
 
 // Optional authentication
-fastify.get('/optional', {
-  preHandler: [fastify.optionalAuth]
-}, async (request, reply) => {
-  // request.user may or may not be available
-});
+fastify.get(
+  '/optional',
+  {
+    preHandler: [fastify.optionalAuth],
+  },
+  async (request, reply) => {
+    // request.user may or may not be available
+  },
+);
 
 // Admin only
-fastify.get('/admin', {
-  preHandler: [fastify.authenticate, fastify.adminOnly]
-}, async (request, reply) => {
-  // Only admins can access
-});
+fastify.get(
+  '/admin',
+  {
+    preHandler: [fastify.authenticate, fastify.adminOnly],
+  },
+  async (request, reply) => {
+    // Only admins can access
+  },
+);
 
 // Manager or Admin
-fastify.get('/management', {
-  preHandler: [fastify.authenticate, fastify.managerOrAdmin]
-}, async (request, reply) => {
-  // Managers and admins can access
-});
+fastify.get(
+  '/management',
+  {
+    preHandler: [fastify.authenticate, fastify.managerOrAdmin],
+  },
+  async (request, reply) => {
+    // Managers and admins can access
+  },
+);
 
 // Resource ownership
-fastify.get('/users/:userId/profile', {
-  preHandler: [fastify.authenticate, fastify.requireOwnership('userId')]
-}, async (request, reply) => {
-  // User can only access their own profile
-});
+fastify.get(
+  '/users/:userId/profile',
+  {
+    preHandler: [fastify.authenticate, fastify.requireOwnership('userId')],
+  },
+  async (request, reply) => {
+    // User can only access their own profile
+  },
+);
 ```
 
 ### Security Middleware
 
 ```typescript
 // CSRF protection
-fastify.post('/form', {
-  preHandler: [fastify.csrfProtection]
-}, async (request, reply) => {
-  // CSRF protected endpoint
-});
+fastify.post(
+  '/form',
+  {
+    preHandler: [fastify.csrfProtection],
+  },
+  async (request, reply) => {
+    // CSRF protected endpoint
+  },
+);
 
 // Input validation
-fastify.post('/data', {
-  preHandler: [fastify.validateInput(schema)]
-}, async (request, reply) => {
-  // Input validated and sanitized
-});
+fastify.post(
+  '/data',
+  {
+    preHandler: [fastify.validateInput(schema)],
+  },
+  async (request, reply) => {
+    // Input validated and sanitized
+  },
+);
 
 // SQL injection protection
-fastify.post('/search', {
-  preHandler: [fastify.sqlInjectionProtection]
-}, async (request, reply) => {
-  // Protected against SQL injection
-});
+fastify.post(
+  '/search',
+  {
+    preHandler: [fastify.sqlInjectionProtection],
+  },
+  async (request, reply) => {
+    // Protected against SQL injection
+  },
+);
 
 // Audit logging
-fastify.post('/sensitive-action', {
-  preHandler: [fastify.authenticate, fastify.auditLog('sensitive_action')]
-}, async (request, reply) => {
-  // Action will be logged
-});
+fastify.post(
+  '/sensitive-action',
+  {
+    preHandler: [fastify.authenticate, fastify.auditLog('sensitive_action')],
+  },
+  async (request, reply) => {
+    // Action will be logged
+  },
+);
 ```
 
 ## Configuration
@@ -405,6 +475,7 @@ APP_URL=http://localhost:3000
 ## Security Best Practices
 
 ### 1. Password Requirements
+
 - Minimum 8 characters
 - At least one uppercase letter
 - At least one lowercase letter
@@ -413,23 +484,27 @@ APP_URL=http://localhost:3000
 - No common patterns or words
 
 ### 2. Rate Limiting
+
 - Signup/Signin: 5 attempts per 15 minutes per IP
 - Password reset: 3 requests per 15 minutes per IP
 - Refresh token: 10 requests per 15 minutes per IP
 
 ### 3. Session Security
+
 - Sessions expire after 7 days
 - Refresh tokens expire after 30 days
 - Automatic cleanup of expired sessions
 - Session invalidation on password change
 
 ### 4. Input Validation
+
 - All inputs are validated and sanitized
 - SQL injection protection
 - XSS prevention
 - CSRF protection for web requests
 
 ### 5. Security Headers
+
 - Content Security Policy (CSP)
 - HTTP Strict Transport Security (HSTS)
 - X-Content-Type-Options: nosniff
@@ -448,8 +523,8 @@ const response = await fetch('/api/v1/auth/signup', {
   body: JSON.stringify({
     email: 'user@example.com',
     password: 'SecurePass123!',
-    name: 'John Doe'
-  })
+    name: 'John Doe',
+  }),
 });
 
 const { user, accessToken, refreshToken } = await response.json();
@@ -461,15 +536,15 @@ localStorage.setItem('refreshToken', refreshToken);
 // Make authenticated requests
 const apiResponse = await fetch('/api/v1/auth/me', {
   headers: {
-    'Authorization': `Bearer ${accessToken}`
-  }
+    Authorization: `Bearer ${accessToken}`,
+  },
 });
 
 // Refresh token when access token expires
 const refreshResponse = await fetch('/api/v1/auth/refresh', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ refreshToken })
+  body: JSON.stringify({ refreshToken }),
 });
 
 const { accessToken: newAccessToken } = await refreshResponse.json();
@@ -480,22 +555,30 @@ localStorage.setItem('accessToken', newAccessToken);
 
 ```typescript
 // Admin-only route
-fastify.get('/admin/users', {
-  preHandler: [fastify.authenticate, fastify.adminOnly]
-}, async (request, reply) => {
-  const users = await fastify.prisma.user.findMany();
-  reply.send({ users });
-});
+fastify.get(
+  '/admin/users',
+  {
+    preHandler: [fastify.authenticate, fastify.adminOnly],
+  },
+  async (request, reply) => {
+    const users = await fastify.prisma.user.findMany();
+    reply.send({ users });
+  },
+);
 
 // User can only access their own data
-fastify.get('/users/:userId/tasks', {
-  preHandler: [fastify.authenticate, fastify.requireOwnership('userId')]
-}, async (request, reply) => {
-  const tasks = await fastify.prisma.task.findMany({
-    where: { assigneeId: request.params.userId }
-  });
-  reply.send({ tasks });
-});
+fastify.get(
+  '/users/:userId/tasks',
+  {
+    preHandler: [fastify.authenticate, fastify.requireOwnership('userId')],
+  },
+  async (request, reply) => {
+    const tasks = await fastify.prisma.task.findMany({
+      where: { assigneeId: request.params.userId },
+    });
+    reply.send({ tasks });
+  },
+);
 ```
 
 ## Migration

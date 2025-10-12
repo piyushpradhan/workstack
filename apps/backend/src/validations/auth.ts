@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import z from "zod";
+import z from 'zod';
 
 export const register = {
   body: {
@@ -8,9 +8,9 @@ export const register = {
     properties: {
       name: { type: 'string' },
       email: { type: 'string', format: 'email' },
-      password: { type: 'string' }
-    }
-  }
+      password: { type: 'string' },
+    },
+  },
 } as const;
 
 export const login = {
@@ -19,21 +19,23 @@ export const login = {
     required: ['email', 'password'],
     properties: {
       email: { type: 'string', format: 'email' },
-      password: { type: 'string' }
-    }
-  }
+      password: { type: 'string' },
+    },
+  },
 } as const;
 
 const RegisterSchema = z.object({
-  email: z.string().email({ message: "Please enter valid email" }),
-  password: z.string({ message: "Password must be at least 8 characters" }).min(8),
-  name: z.string()
-})
+  email: z.string().email({ message: 'Please enter valid email' }),
+  password: z
+    .string({ message: 'Password must be at least 8 characters' })
+    .min(8),
+  name: z.string(),
+});
 
 const LoginSchema = z.object({
-  email: z.string().email({ message: "Please enter valid email" }),
-  password: z.string().min(8)
-})
+  email: z.string().email({ message: 'Please enter valid email' }),
+  password: z.string().min(8),
+});
 
 export type Register = z.infer<typeof RegisterSchema>;
 export type Login = z.infer<typeof LoginSchema>;

@@ -1,7 +1,7 @@
-import closeWithGrace from 'close-with-grace'
-import { type TypeBoxTypeProvider } from '@fastify/type-provider-typebox'
-import { config } from './config/index.js'
-import build from './app.js'
+import closeWithGrace from 'close-with-grace';
+import { type TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
+import { config } from './config/index.js';
+import build from './app.js';
 
 function getLoggerOptions() {
   if (process.stdout.isTTY) {
@@ -11,13 +11,13 @@ function getLoggerOptions() {
         target: 'pino-pretty',
         options: {
           translateTime: 'HH:MM:ss Z',
-          ignore: 'pid,hostname'
-        }
-      }
-    }
+          ignore: 'pid,hostname',
+        },
+      },
+    };
   }
 
-  return { level: config.LOG_LEVEL }
+  return { level: config.LOG_LEVEL };
 }
 
 const app = build({
@@ -27,34 +27,31 @@ const app = build({
   ajv: {
     customOptions: {
       coerceTypes: 'array',
-      removeAdditional: false
-    }
-  }
-}).withTypeProvider<TypeBoxTypeProvider>()
+      removeAdditional: false,
+    },
+  },
+}).withTypeProvider<TypeBoxTypeProvider>();
 
 async function init() {
-  closeWithGrace(
-    { delay: 500 },
-    async ({ err }) => {
-      if (err !== null) {
-        app.log.error(err)
-      }
-      await app.close()
+  closeWithGrace({ delay: 500 }, async ({ err }) => {
+    if (err !== null) {
+      app.log.error(err);
     }
-  )
+    await app.close();
+  });
 
-  await app.ready()
+  await app.ready();
 
   try {
     await app.listen({
       port: config.PORT,
-      host: config.HOST
-    })
-    app.log.info(`Server listening on http://${config.HOST}:${config.PORT}`)
+      host: config.HOST,
+    });
+    app.log.info(`Server listening on http://${config.HOST}:${config.PORT}`);
   } catch (err) {
-    app.log.error(err)
-    process.exit(1)
+    app.log.error(err);
+    process.exit(1);
   }
 }
 
-init()
+init();

@@ -1,8 +1,8 @@
-import fp from "fastify-plugin";
+import fp from 'fastify-plugin';
 import secureSession, {
-  type SecureSessionPluginOptions
+  type SecureSessionPluginOptions,
 } from '@fastify/secure-session';
-import { config, COOKIES } from "../config/index.js"
+import { config, COOKIES } from '../config/index.js';
 
 export default fp<SecureSessionPluginOptions>(async (fastify) => {
   fastify.register(secureSession, {
@@ -14,13 +14,13 @@ export default fp<SecureSessionPluginOptions>(async (fastify) => {
       path: '/',
       httpOnly: true,
       // Should be true for production
-      secure: config.APP_ENV !== 'development'
-    }
-  })
-})
+      secure: config.APP_ENV !== 'development',
+    },
+  });
+});
 
 declare module '@fastify/secure-session' {
   interface SessionData {
-    sessionId: string
+    sessionId: string;
   }
 }

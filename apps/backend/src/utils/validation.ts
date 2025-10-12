@@ -1,27 +1,28 @@
 import { type FastifyRequest } from 'fastify';
-import { Type } from "@sinclair/typebox";
+import { Type } from '@sinclair/typebox';
 
 export class ValidationHelper {
   static validateQuery<T>(request: FastifyRequest): T {
-    return request.query as T
+    return request.query as T;
   }
 
   static validateBody<T>(request: FastifyRequest): T {
-    return request.body as T
+    return request.body as T;
   }
 
   static validateParams<T>(request: FastifyRequest): T {
-    return request.params as T
+    return request.params as T;
   }
 
   static isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 
   static isValidUUID(uuid: string): boolean {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-    return uuidRegex.test(uuid)
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
   }
 }
 
@@ -32,7 +33,9 @@ export const validateEmail = (email: string): boolean => {
 };
 
 // Password validation with comprehensive rules
-export const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
+export const validatePassword = (
+  password: string,
+): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
 
   if (password.length < 8) {
@@ -107,7 +110,9 @@ export const sanitizeEmail = (email: string): string => {
 };
 
 // Password strength scoring
-export const getPasswordStrength = (password: string): { score: number; label: string } => {
+export const getPasswordStrength = (
+  password: string,
+): { score: number; label: string } => {
   let score = 0;
 
   // Length scoring
@@ -122,7 +127,8 @@ export const getPasswordStrength = (password: string): { score: number; label: s
   if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 1;
 
   // Bonus for uncommon characters
-  if (/[^a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 1;
+  if (/[^a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password))
+    score += 1;
 
   let label: string;
   if (score <= 2) label = 'Very Weak';
@@ -141,73 +147,75 @@ export const AuthSchemas = {
       format: 'email',
       minLength: 5,
       maxLength: 255,
-      description: 'Valid email address'
+      description: 'Valid email address',
     }),
     password: Type.String({
       minLength: 8,
       maxLength: 128,
-      description: 'Password with at least 8 characters'
+      description: 'Password with at least 8 characters',
     }),
-    name: Type.Optional(Type.String({
-      minLength: 1,
-      maxLength: 100,
-      description: 'User display name'
-    })),
+    name: Type.Optional(
+      Type.String({
+        minLength: 1,
+        maxLength: 100,
+        description: 'User display name',
+      }),
+    ),
   }),
 
   Signin: Type.Object({
     email: Type.String({
       format: 'email',
-      description: 'Valid email address'
+      description: 'Valid email address',
     }),
     password: Type.String({
       minLength: 1,
-      description: 'User password'
+      description: 'User password',
     }),
   }),
 
   RefreshToken: Type.Object({
     refreshToken: Type.String({
       minLength: 1,
-      description: 'Valid refresh token'
+      description: 'Valid refresh token',
     }),
   }),
 
   PasswordResetRequest: Type.Object({
     email: Type.String({
       format: 'email',
-      description: 'Valid email address'
+      description: 'Valid email address',
     }),
   }),
 
   PasswordReset: Type.Object({
     token: Type.String({
       minLength: 1,
-      description: 'Password reset token'
+      description: 'Password reset token',
     }),
     password: Type.String({
       minLength: 8,
       maxLength: 128,
-      description: 'New password'
+      description: 'New password',
     }),
   }),
 
   ChangePassword: Type.Object({
     currentPassword: Type.String({
       minLength: 1,
-      description: 'Current password'
+      description: 'Current password',
     }),
     newPassword: Type.String({
       minLength: 8,
       maxLength: 128,
-      description: 'New password'
+      description: 'New password',
     }),
   }),
 
   SessionId: Type.Object({
     sessionId: Type.String({
       minLength: 1,
-      description: 'Session ID'
+      description: 'Session ID',
     }),
   }),
 };

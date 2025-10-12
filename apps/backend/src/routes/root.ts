@@ -1,15 +1,15 @@
-import { FastifyPluginAsync } from 'fastify'
+import { type FastifyPluginAsync } from 'fastify';
 
 const routes: FastifyPluginAsync = async (app): Promise<void> => {
-  console.log('Registering root routes... (again)')
+  console.log('Registering root routes... (again)');
   app.route({
     method: 'GET',
     url: '/',
     handler: async (request, reply) => {
-      console.log('Root route hit')
-      reply.send('Hello World')
-    }
-  })
-}
+      console.log('Root route hit');
+      reply.send('Hello World');
+    },
+  });
+};
 
-export default routes
+export default routes;

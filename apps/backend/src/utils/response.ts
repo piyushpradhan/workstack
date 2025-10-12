@@ -1,23 +1,33 @@
-import type { FastifyReply } from 'fastify'
-import type { ApiResponse } from '../types/api.js'
+import type { FastifyReply } from 'fastify';
+import type { ApiResponse } from '../types/api.js';
 
 export class ResponseHelper {
-  static success<T>(reply: FastifyReply, data: T, message?: string, statusCode = 200): void {
+  static success<T>(
+    reply: FastifyReply,
+    data: T,
+    message?: string,
+    statusCode = 200,
+  ): void {
     const response: ApiResponse<T> = {
       success: true,
       data,
-      message
-    }
-    reply.code(statusCode).send(response)
+      message,
+    };
+    reply.code(statusCode).send(response);
   }
 
-  static error(reply: FastifyReply, message: string, statusCode = 500, error?: string): void {
+  static error(
+    reply: FastifyReply,
+    message: string,
+    statusCode = 500,
+    error?: string,
+  ): void {
     const response: ApiResponse = {
       success: false,
       message,
-      error
-    }
-    reply.code(statusCode).send(response)
+      error,
+    };
+    reply.code(statusCode).send(response);
   }
 
   static paginated<T>(
@@ -26,9 +36,9 @@ export class ResponseHelper {
     page: number,
     limit: number,
     total: number,
-    message?: string
+    message?: string,
   ): void {
-    const totalPages = Math.ceil(total / limit)
+    const totalPages = Math.ceil(total / limit);
     const response: ApiResponse<T[]> = {
       success: true,
       data,
@@ -37,9 +47,9 @@ export class ResponseHelper {
         page,
         limit,
         total,
-        totalPages
-      }
-    }
-    reply.code(200).send(response)
+        totalPages,
+      },
+    };
+    reply.code(200).send(response);
   }
 }

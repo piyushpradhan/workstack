@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Starting database seeding...')
+  console.log('Starting database seeding...');
 
   // Create sample users
   const users = await Promise.all([
@@ -15,8 +15,8 @@ async function main() {
         name: 'Admin User',
         role: 'ADMIN',
         isActive: true,
-        password: 'admin123'
-      }
+        password: 'admin123',
+      },
     }),
     prisma.user.upsert({
       where: { email: 'user@workstack.com' },
@@ -26,22 +26,25 @@ async function main() {
         name: 'Regular User',
         role: 'MEMBER',
         isActive: true,
-        password: 'user123'
-      }
-    })
-  ])
+        password: 'user123',
+      },
+    }),
+  ]);
 
-  console.log('Created users:', users)
-  console.log('Database seeding completed!')
+  console.log('Created users:', users);
+  console.log('Database seeding completed!');
 }
 
 main()
   .catch((e) => {
-    console.error('Error during seeding:', e)
-    process.exit(1)
+    console.error('Error during seeding:', e);
+    process.exit(1);
   })
   .finally(() => {
-    prisma.$disconnect().then(() => {
-      console.log("Disconnected from Prisma");
-    }).catch((err) => console.error("Error disconnecting from Prisma: ", err));
-  })
+    prisma
+      .$disconnect()
+      .then(() => {
+        console.log('Disconnected from Prisma');
+      })
+      .catch((err) => console.error('Error disconnecting from Prisma: ', err));
+  });

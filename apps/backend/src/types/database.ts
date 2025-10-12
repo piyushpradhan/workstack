@@ -1,28 +1,28 @@
 export interface BaseEntity {
-  id: string
-  createdAt: Date
-  updatedAt: Date
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface User extends BaseEntity {
-  email: string
-  name: string
-  role: UserRole
-  isActive: boolean
+  email: string;
+  name: string;
+  role: UserRole;
+  isActive: boolean;
 }
 
 export enum UserRole {
   ADMIN = 'admin',
   USER = 'user',
-  MODERATOR = 'moderator'
+  MODERATOR = 'moderator',
 }
 
 export interface DatabaseConfig {
-  url: string
+  url: string;
   options: {
-    ssl?: boolean | { rejectUnauthorized: boolean }
-    max?: number
-    idleTimeoutMillis?: number
-    connectionTimeoutMillis?: number
-  }
+    ssl?: boolean | { rejectUnauthorized: boolean };
+    max?: number;
+    idleTimeoutMillis?: number;
+    connectionTimeoutMillis?: number;
+  };
 }
