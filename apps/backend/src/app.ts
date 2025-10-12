@@ -5,6 +5,8 @@ import fastify from 'fastify';
 
 import autoload from '@fastify/autoload';
 import helmet from '@fastify/helmet';
+import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
 
 import services from './services/index.js';
 import controllers from './controllers/index.js';
@@ -17,6 +19,59 @@ const build = (opts: FastifyServerOptions) => {
   const app: FastifyInstance = fastify(opts);
 
   app.register(helmet);
+
+  // Register Swagger documentation
+  app.register(swagger, {
+    openapi: {
+      openapi: '3.0.0',
+      info: {
+        title: 'Workstack API',
+        description: 'A modern authentication and user management API',
+        version: '1.0.0',
+        contact: {
+          name: 'API Support',
+          email: 'piyushpradhan3.14@gmail.com',
+        },
+      },
+      servers: [
+        {
+          url: 'http://localhost:3000',
+          description: 'Development server',
+        },
+      ],
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+          },
+        },
+      },
+    },
+  });
+
+  app.register(swaggerUi, {
+    routePrefix: '/docs',
+    uiConfig: {
+      docExpansion: 'list',
+      deepLinking: false,
+    },
+    uiHooks: {
+      onRequest: function (request, reply, next) {
+        next();
+      },
+      preHandler: function (request, reply, next) {
+        next();
+      },
+    },
+    staticCSP: true,
+    transformStaticCSP: (header) => header,
+    transformSpecification: (swaggerObject, request, reply) => {
+      return swaggerObject;
+    },
+    transformSpecificationClone: true,
+  });
 
   app.register(autoload, {
     dir: join(dir, 'plugins'),
