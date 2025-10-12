@@ -6,10 +6,20 @@ export const register = {
     type: 'object',
     required: ['email', 'password'],
     properties: {
-      name: { type: 'string' },
-      email: { type: 'string', format: 'email' },
-      password: { type: 'string' },
+      name: {
+        type: 'string',
+        minLength: 1,
+      },
+      email: {
+        type: 'string',
+        format: 'email',
+      },
+      password: {
+        type: 'string',
+        minLength: 8,
+      },
     },
+    additionalProperties: false,
   },
 } as const;
 
@@ -18,9 +28,16 @@ export const login = {
     type: 'object',
     required: ['email', 'password'],
     properties: {
-      email: { type: 'string', format: 'email' },
-      password: { type: 'string' },
+      email: {
+        type: 'string',
+        format: 'email',
+      },
+      password: {
+        type: 'string',
+        minLength: 8,
+      },
     },
+    additionalProperties: false,
   },
 } as const;
 
