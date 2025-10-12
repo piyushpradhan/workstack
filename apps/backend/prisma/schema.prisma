@@ -12,21 +12,29 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  avatar    String?
-  role      UserRole @default(MEMBER)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   String    @id @default(uuid())
+  name                 String
+  email                String    @unique
+  avatar               String?
+  role                 UserRole  @default(MEMBER)
+  isActive             Boolean   @default(true)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  password             String
+  lastLoginAt          DateTime?
+  emailVerifiedAt      DateTime?
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
 
   // Relations
   projects      Project[]
   assignedTasks Task[]
+  sessions      Session[]
+  refreshTokens RefreshToken[]
 
   @@index([email])
   @@index([isActive])
+  @@index([emailVerifiedAt])
 }
 
 enum UserRole {
@@ -133,4 +141,44 @@ enum DependencyType {
   DEPENDS_ON
   RELATED
   DUPLICATE
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  userAgent String?
+  ipAddress String?
+  isActive  Boolean  @default(true)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  nonce     String
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, nonce])
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([isActive])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  userAgent String?
+  ipAddress String?
+  isActive  Boolean  @default(true)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@index([isActive])
 }

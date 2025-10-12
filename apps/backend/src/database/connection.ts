@@ -2,11 +2,11 @@ import { PrismaClient } from '@prisma/client'
 import { databaseConfig } from '../config/database.js'
 
 declare global {
-  // eslint-disable-next-line no-var
+
   var __prisma: PrismaClient | undefined
 }
 
-export const prisma = globalThis.__prisma || new PrismaClient({
+export const prisma = globalThis.__prisma ?? new PrismaClient({
   datasources: {
     db: {
       url: databaseConfig.url
