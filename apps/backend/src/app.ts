@@ -13,6 +13,7 @@ import controllers from "./controllers/index.js";
 import rootRoutes from "./routes/root.js";
 import authRoutes from "./routes/auth.js";
 import projectRoutes from "./routes/projects.js";
+import taskRoutes from "./routes/tasks.js";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 
@@ -59,10 +60,10 @@ const build = (opts: FastifyServerOptions) => {
       deepLinking: false,
     },
     uiHooks: {
-      onRequest: function(_request, _reply, next) {
+      onRequest: function (_request, _reply, next) {
         next();
       },
-      preHandler: function(_request, _reply, next) {
+      preHandler: function (_request, _reply, next) {
         next();
       },
     },
@@ -85,6 +86,7 @@ const build = (opts: FastifyServerOptions) => {
   app.register(rootRoutes);
   app.register(authRoutes, { prefix: "/auth" });
   app.register(projectRoutes, { prefix: "/projects" });
+  app.register(taskRoutes, { prefix: "/tasks" });
 
   return app;
 };
