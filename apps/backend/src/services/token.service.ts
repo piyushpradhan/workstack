@@ -1,18 +1,18 @@
-import httpErrors from 'http-errors';
-import cryptoRandomString from 'crypto-random-string';
-import type { FastifyJWT, JWT } from '@fastify/jwt';
-import { config, TokenTypes } from '../config/index.js';
+import httpErrors from "http-errors";
+import cryptoRandomString from "crypto-random-string";
+import type { FastifyJWT, JWT } from "@fastify/jwt";
+import { config, TokenTypes } from "../config/index.js";
 
 class TokenService {
-  constructor(private jwt: JWT) {}
+  constructor(private jwt: JWT) { }
 
-  generateNonce = () => cryptoRandomString({ length: 16, type: 'base64' });
+  generateNonce = () => cryptoRandomString({ length: 16, type: "base64" });
 
   verifyJwt = (token: string, type: TokenTypes) => {
     let payload;
 
     try {
-      payload = this.jwt.verify<FastifyJWT['user']>(token);
+      payload = this.jwt.verify<FastifyJWT["user"]>(token);
     } catch (error) {
       if (error instanceof Error) {
         throw new httpErrors.Unauthorized(error.message);
@@ -22,7 +22,7 @@ class TokenService {
     }
 
     if (payload.type !== type) {
-      throw new httpErrors.Unauthorized('Invalid token type');
+      throw new httpErrors.Unauthorized("Invalid token type");
     }
 
     return payload;

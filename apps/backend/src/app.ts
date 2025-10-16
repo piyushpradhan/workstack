@@ -1,17 +1,18 @@
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import type { FastifyServerOptions, FastifyInstance } from 'fastify';
-import fastify from 'fastify';
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import type { FastifyServerOptions, FastifyInstance } from "fastify";
+import fastify from "fastify";
 
-import autoload from '@fastify/autoload';
-import helmet from '@fastify/helmet';
-import swagger from '@fastify/swagger';
-import swaggerUi from '@fastify/swagger-ui';
+import autoload from "@fastify/autoload";
+import helmet from "@fastify/helmet";
+import swagger from "@fastify/swagger";
+import swaggerUi from "@fastify/swagger-ui";
 
-import services from './services/index.js';
-import controllers from './controllers/index.js';
-import rootRoutes from './routes/root.js';
-import authRoutes from './routes/auth/index.js';
+import services from "./services/index.js";
+import controllers from "./controllers/index.js";
+import rootRoutes from "./routes/root.js";
+import authRoutes from "./routes/auth.js";
+import projectRoutes from "./routes/projects.js";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 
@@ -23,28 +24,28 @@ const build = (opts: FastifyServerOptions) => {
   // Register Swagger documentation
   app.register(swagger, {
     openapi: {
-      openapi: '3.0.0',
+      openapi: "3.0.0",
       info: {
-        title: 'Workstack API',
-        description: 'A modern authentication and user management API',
-        version: '1.0.0',
+        title: "Workstack API",
+        description: "A modern authentication and user management API",
+        version: "1.0.0",
         contact: {
-          name: 'API Support',
-          email: 'piyushpradhan3.14@gmail.com',
+          name: "API Support",
+          email: "piyushpradhan3.14@gmail.com",
         },
       },
       servers: [
         {
-          url: 'http://localhost:3000',
-          description: 'Development server',
+          url: "http://localhost:3000",
+          description: "Development server",
         },
       ],
       components: {
         securitySchemes: {
           bearerAuth: {
-            type: 'http',
-            scheme: 'bearer',
-            bearerFormat: 'JWT',
+            type: "http",
+            scheme: "bearer",
+            bearerFormat: "JWT",
           },
         },
       },
@@ -52,40 +53,38 @@ const build = (opts: FastifyServerOptions) => {
   });
 
   app.register(swaggerUi, {
-    routePrefix: '/docs',
+    routePrefix: "/docs",
     uiConfig: {
-      docExpansion: 'list',
+      docExpansion: "list",
       deepLinking: false,
     },
     uiHooks: {
-      onRequest: function (request, reply, next) {
+      onRequest: function(_request, _reply, next) {
         next();
       },
-      preHandler: function (request, reply, next) {
+      preHandler: function(_request, _reply, next) {
         next();
       },
     },
     staticCSP: true,
     transformStaticCSP: (header) => header,
-    transformSpecification: (swaggerObject, request, reply) => {
+    transformSpecification: (swaggerObject, _request, _reply) => {
       return swaggerObject;
     },
     transformSpecificationClone: true,
   });
 
   app.register(autoload, {
-    dir: join(dir, 'plugins'),
+    dir: join(dir, "plugins"),
   });
 
   app.register(services);
   app.register(controllers);
 
   // Register routes manually instead of using autoload
-  console.log('Registering root routes...');
   app.register(rootRoutes);
-  console.log('Registering auth routes...');
-  app.register(authRoutes, { prefix: '/auth' });
-  console.log('Routes registered successfully');
+  app.register(authRoutes, { prefix: "/auth" });
+  app.register(projectRoutes, { prefix: "/projects" });
 
   return app;
 };

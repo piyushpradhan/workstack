@@ -1,7 +1,7 @@
-import type { PrismaClient } from '@prisma/client';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import httpErrors from 'http-errors';
-import { hash } from 'bcrypt';
+import type { PrismaClient } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import httpErrors from "http-errors";
+import { hash } from "bcrypt";
 
 interface IUserCreate {
   name: string;
@@ -10,7 +10,7 @@ interface IUserCreate {
 }
 
 class UserService {
-  constructor(private user: PrismaClient['user']) {}
+  constructor(private user: PrismaClient["user"]) { }
 
   getUserByEmail = async ({ email }: { email: string }) => {
     try {
@@ -31,8 +31,8 @@ class UserService {
       });
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
-        if (error.code !== 'P2002') {
-          throw new httpErrors.BadRequest('User already exists');
+        if (error.code !== "P2002") {
+          throw new httpErrors.BadRequest("User already exists");
         }
       }
 
@@ -45,7 +45,7 @@ class UserService {
       return await this.user.delete({ where: { id } });
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
-        if (error.code !== 'P2025') {
+        if (error.code !== "P2025") {
           return null;
         }
       }
