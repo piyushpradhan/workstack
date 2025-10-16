@@ -1,7 +1,6 @@
 import { type FastifyPluginAsync } from 'fastify';
 
 const routes: FastifyPluginAsync = async (app): Promise<void> => {
-  console.log('Registering root routes... (again)');
   app.route({
     method: 'GET',
     url: '/',
@@ -18,7 +17,6 @@ const routes: FastifyPluginAsync = async (app): Promise<void> => {
       },
     },
     handler: async (request, reply) => {
-      console.log('Root route hit');
       reply.send('Hello World');
     },
   });

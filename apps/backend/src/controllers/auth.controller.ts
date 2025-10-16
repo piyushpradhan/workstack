@@ -1,16 +1,16 @@
-import { type RouteHandler } from 'fastify';
-import type SessionService from '../services/session.service.js';
-import type TokenService from '../services/token.service.js';
-import type UserService from '../services/user.service.js';
-import type { Register, Login } from '../validations/auth.js';
-import { compare } from 'bcrypt';
+import { type RouteHandler } from "fastify";
+import type SessionService from "../services/session.service.js";
+import type TokenService from "../services/token.service.js";
+import type UserService from "../services/user.service.js";
+import type { Register, Login } from "../validations/auth.js";
+import { compare } from "bcrypt";
 
 class AuthController {
   constructor(
     private userService: UserService,
     private tokenService: TokenService,
     private sessionService: SessionService,
-  ) {}
+  ) { }
 
   register: RouteHandler<{ Body: Register }> = async (request, reply) => {
     const { name, email, password } = request.body;
@@ -25,14 +25,14 @@ class AuthController {
     const user = await this.userService.getUserByEmail({ email });
 
     if (!user) {
-      reply.code(401).send('Email or password is invalid');
+      reply.code(401).send("Email or password is invalid");
       return;
     }
 
     const match = await compare(password, user.password);
 
     if (!match) {
-      reply.code(401).send('Email or password is invalid');
+      reply.code(401).send("Email or password is invalid");
       return;
     }
 

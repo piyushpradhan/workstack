@@ -1,21 +1,21 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import z from 'zod';
+import z from "zod";
 
 export const register = {
   body: {
-    type: 'object',
-    required: ['email', 'password'],
+    type: "object",
+    required: ["email", "password"],
     properties: {
       name: {
-        type: 'string',
+        type: "string",
         minLength: 1,
       },
       email: {
-        type: 'string',
-        format: 'email',
+        type: "string",
+        format: "email",
       },
       password: {
-        type: 'string',
+        type: "string",
         minLength: 8,
       },
     },
@@ -25,15 +25,15 @@ export const register = {
 
 export const login = {
   body: {
-    type: 'object',
-    required: ['email', 'password'],
+    type: "object",
+    required: ["email", "password"],
     properties: {
       email: {
-        type: 'string',
-        format: 'email',
+        type: "string",
+        format: "email",
       },
       password: {
-        type: 'string',
+        type: "string",
         minLength: 8,
       },
     },
@@ -42,15 +42,15 @@ export const login = {
 } as const;
 
 const RegisterSchema = z.object({
-  email: z.string().email({ message: 'Please enter valid email' }),
+  email: z.string().email({ message: "Please enter valid email" }),
   password: z
-    .string({ message: 'Password must be at least 8 characters' })
+    .string({ message: "Password must be at least 8 characters" })
     .min(8),
   name: z.string(),
 });
 
 const LoginSchema = z.object({
-  email: z.string().email({ message: 'Please enter valid email' }),
+  email: z.string().email({ message: "Please enter valid email" }),
   password: z.string().min(8),
 });
 

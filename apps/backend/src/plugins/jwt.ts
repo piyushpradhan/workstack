@@ -1,26 +1,24 @@
-import fp from 'fastify-plugin';
-import type { FastifyRequest, FastifyReply } from 'fastify';
+import fp from "fastify-plugin";
+import type { FastifyRequest, FastifyReply } from "fastify";
 import jwt, {
   type FastifyJWTOptions,
-  type FastifyJwtVerifyOptions,
-} from '@fastify/jwt';
-import { extractToken } from './jwtCookie.js';
-import { config, TokenTypes } from '../config/index.js';
+} from "@fastify/jwt";
+import { extractToken } from "./jwtCookie.js";
+import { config, TokenTypes } from "../config/index.js";
 
 const authenticate =
-  (opts: FastifyJwtVerifyOptions['verify'] = {}) =>
   async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       await request.jwtVerify({
         decode: {},
-        verify: opts,
+        verify: {},
       });
     } catch (error) {
       reply.code(401).send({ error: (error as Error).message });
     }
 
     if (request.user.type !== TokenTypes.ACCESS) {
-      reply.code(401).send({ error: 'Invalid token type' });
+      reply.code(401).send({ error: "Invalid token type" });
     }
   };
 
@@ -29,10 +27,10 @@ export default fp<FastifyJWTOptions>(async (fastify) => {
     secret: config.JWT_SECRET,
     verify: { extractToken },
   });
-  fastify.decorate('authenticate', authenticate);
+  fastify.decorate("authenticate", authenticate);
 });
 
-declare module '@fastify/jwt' {
+declare module "@fastify/jwt" {
   interface FastifyJWT {
     payload: {
       sub: string;
@@ -46,5 +44,11 @@ declare module '@fastify/jwt' {
       iat: number;
       exp: number;
     };
+  }
+}
+
+declare module "fastify" {
+  interface FastifyInstance {
+    authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
 }

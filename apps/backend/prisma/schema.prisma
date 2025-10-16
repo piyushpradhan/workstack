@@ -27,10 +27,15 @@ model User {
   passwordResetExpires DateTime?
 
   // Relations
-  projects      Project[]
-  assignedTasks Task[]
-  sessions      Session[]
-  refreshTokens RefreshToken[]
+  sessions Session[]
+
+  // Many-to-many relationships for projects
+  projectOwnerships  ProjectOwner[]
+  projectMemberships ProjectMember[]
+
+  // Many-to-many relationships for tasks
+  taskOwnerships  TaskOwner[]
+  taskMemberships TaskMember[]
 
   @@index([email])
   @@index([isActive])
@@ -54,14 +59,13 @@ model Project {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  // Foreign keys
-  ownerId String
-
   // Relations
-  owner User   @relation(fields: [ownerId], references: [id])
   tasks Task[]
 
-  @@index([ownerId])
+  // Many-to-many relationships
+  owners  ProjectOwner[]
+  members ProjectMember[]
+
   @@index([status])
   @@index([startDate])
 }
@@ -86,20 +90,21 @@ model Task {
   updatedAt   DateTime     @updatedAt
 
   // Foreign keys
-  projectId  String
-  assigneeId String?
+  projectId String
 
   // Relations
-  project  Project @relation(fields: [projectId], references: [id])
-  assignee User?   @relation(fields: [assigneeId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
 
   // Task relationships
   dependencies TaskDependency[] @relation("TaskDependencies")
   dependents   TaskDependency[] @relation("TaskDependents")
 
+  // Many-to-many relationships
+  owners  TaskOwner[]
+  members TaskMember[]
+
   // Indexes for performance
   @@index([projectId])
-  @@index([assigneeId])
   @@index([status])
   @@index([dueDate])
 }
@@ -163,22 +168,68 @@ model Session {
   @@index([isActive])
 }
 
-model RefreshToken {
-  id        String   @id @default(uuid())
+// Junction tables for many-to-many relationships
+
+model ProjectOwner {
+  id        String   @id @default(cuid())
+  projectId String
   userId    String
-  token     String   @unique
-  userAgent String?
-  ipAddress String?
-  isActive  Boolean  @default(true)
-  expiresAt DateTime
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Constraints
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Constraints
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+model TaskOwner {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Constraints
+  @@unique([taskId, userId])
+  @@index([taskId])
   @@index([userId])
-  @@index([token])
-  @@index([expiresAt])
-  @@index([isActive])
+}
+
+model TaskMember {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Constraints
+  @@unique([taskId, userId])
+  @@index([taskId])
+  @@index([userId])
 }
