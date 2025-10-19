@@ -2,6 +2,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { FastifyServerOptions, FastifyInstance } from "fastify";
 import fastify from "fastify";
+import cors from "@fastify/cors";
 
 import autoload from "@fastify/autoload";
 import helmet from "@fastify/helmet";
@@ -14,6 +15,7 @@ import rootRoutes from "./routes/root.js";
 import authRoutes from "./routes/auth.js";
 import projectRoutes from "./routes/projects.js";
 import taskRoutes from "./routes/tasks.js";
+import { config } from "./config/index.js";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 
@@ -21,6 +23,13 @@ const build = (opts: FastifyServerOptions) => {
   const app: FastifyInstance = fastify(opts);
 
   app.register(helmet);
+
+  app.register(cors, {
+    origin: config.CORS_ORIGIN,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
 
   // Register Swagger documentation
   app.register(swagger, {
