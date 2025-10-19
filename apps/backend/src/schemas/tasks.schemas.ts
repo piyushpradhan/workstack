@@ -1,5 +1,3 @@
-// OpenAPI/Swagger schemas for tasks endpoints
-
 export const taskUserSchema = {
     type: "object",
     properties: {

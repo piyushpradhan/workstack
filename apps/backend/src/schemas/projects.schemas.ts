@@ -1,5 +1,3 @@
-// OpenAPI/Swagger schemas for projects endpoints
-
 export const projectUserSchema = {
     type: "object",
     properties: {
