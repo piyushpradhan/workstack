@@ -14,6 +14,7 @@ import controllers from "./controllers/index.js";
 import rootRoutes from "./routes/root.js";
 import authRoutes from "./routes/auth.js";
 import projectRoutes from "./routes/projects.js";
+import userRoutes from "./routes/user.js";
 import taskRoutes from "./routes/tasks.js";
 import { config } from "./config/index.js";
 
@@ -28,10 +29,9 @@ const build = (opts: FastifyServerOptions) => {
     origin: config.CORS_ORIGIN,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  });
 
-  // Register Swagger documentation
   app.register(swagger, {
     openapi: {
       openapi: "3.0.0",
@@ -94,6 +94,7 @@ const build = (opts: FastifyServerOptions) => {
   // Register routes manually instead of using autoload
   app.register(rootRoutes);
   app.register(authRoutes, { prefix: "/auth" });
+  app.register(userRoutes, { prefix: "/users" });
   app.register(projectRoutes, { prefix: "/projects" });
   app.register(taskRoutes, { prefix: "/tasks" });
 

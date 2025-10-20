@@ -47,7 +47,7 @@ class AuthController {
       nonce,
     });
 
-    reply.sendAccessTokenAndSessionId(reply, { accessToken, sessionId });
+    reply.sendAccessTokenAndSessionId(reply, { accessToken, sessionId, user });
   };
 }
 

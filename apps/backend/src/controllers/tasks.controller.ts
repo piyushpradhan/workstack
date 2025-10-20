@@ -1,24 +1,12 @@
 import { type RouteHandler } from "fastify";
 import type TasksService from "../services/tasks.service.js";
-import type { FastifyRequest } from "fastify";
-import { TokenTypes } from "../config/index.js";
-
-interface AuthenticatedRequest extends FastifyRequest {
-    user: {
-        sub: string;
-        jti: string;
-        type: TokenTypes;
-        iat: number;
-        exp: number;
-    };
-}
 
 class TasksController {
     constructor(
         private tasksService: TasksService
     ) { }
 
-    list: RouteHandler = async (request: AuthenticatedRequest, reply) => {
+    list: RouteHandler = async (request, reply) => {
         try {
             const userId = request.user.sub;
             const tasks = await this.tasksService.getAllUsersTasks({ userId });
@@ -30,7 +18,7 @@ class TasksController {
         }
     };
 
-    listOwned: RouteHandler = async (request: AuthenticatedRequest, reply) => {
+    listOwned: RouteHandler = async (request, reply) => {
         try {
             const userId = request.user.sub;
             const tasks = await this.tasksService.getAllOwnedTasks({ userId });
@@ -42,7 +30,7 @@ class TasksController {
         }
     };
 
-    listByProject: RouteHandler = async (request: AuthenticatedRequest, reply) => {
+    listByProject: RouteHandler = async (request, reply) => {
         try {
             const userId = request.user.sub;
             const { projectId } = request.params as { projectId: string };
@@ -56,7 +44,7 @@ class TasksController {
         }
     };
 
-    create: RouteHandler = async (request: AuthenticatedRequest, reply) => {
+    create: RouteHandler = async (request, reply) => {
         try {
             const userId = request.user.sub;
             const { title, description, priority, dueDate, projectId } = request.body as {
@@ -83,7 +71,7 @@ class TasksController {
         }
     };
 
-    get: RouteHandler = async (request: AuthenticatedRequest, reply) => {
+    get: RouteHandler = async (request, reply) => {
         try {
             const userId = request.user.sub;
             const { id } = request.params as { id: string };
@@ -101,7 +89,7 @@ class TasksController {
         }
     };
 
-    update: RouteHandler = async (request: AuthenticatedRequest, reply) => {
+    update: RouteHandler = async (request, reply) => {
         try {
             const userId = request.user.sub;
             const { id } = request.params as { id: string };
@@ -145,7 +133,7 @@ class TasksController {
         }
     };
 
-    delete: RouteHandler = async (request: AuthenticatedRequest, reply) => {
+    delete: RouteHandler = async (request, reply) => {
         try {
             const userId = request.user.sub;
             const { id } = request.params as { id: string };

@@ -12,6 +12,16 @@ interface IUserCreate {
 class UserService {
   constructor(private user: PrismaClient["user"]) { }
 
+  getUserByUid = async ({ uid }: { uid: string }) => {
+    try {
+      return await this.user.findUnique({
+        where: { id: uid }
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
   getUserByEmail = async ({ email }: { email: string }) => {
     try {
       return await this.user.findUnique({
