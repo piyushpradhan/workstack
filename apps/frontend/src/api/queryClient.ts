@@ -1,4 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
+import { persistQueryClient } from '@tanstack/react-query-persist-client';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 
 export const queryClient = new QueryClient({
     defaultOptions: {
@@ -18,4 +20,12 @@ export const queryClient = new QueryClient({
             retry: 1,
         },
     },
+});
+
+const persister = createAsyncStoragePersister({ storage: window.localStorage });
+
+persistQueryClient({
+    queryClient,
+    persister,
+    maxAge: 24 * 60 * 60 * 1000,
 });

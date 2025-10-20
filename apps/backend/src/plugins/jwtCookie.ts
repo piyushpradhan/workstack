@@ -2,8 +2,10 @@ import fp from "fastify-plugin";
 import { type FastifyReply, type FastifyRequest } from "fastify";
 import httpErrors from "http-errors";
 import { config, COOKIES } from "../config/index.js";
+import { type User } from "@prisma/client";
 
 interface SendAccessTokenAndSessionId {
+  user: User;
   accessToken: string;
   sessionId: string;
   redirectTo?: string;
@@ -25,8 +27,8 @@ const cookieOptions = ({
 
   return {
     path,
-    secure: config.APP_ENV !== "development",
-    sameSite: "lax",
+    secure: true,
+    sameSite: "none",
     domain:
       config.APP_ENV === "development"
         ? "localhost"
@@ -97,7 +99,7 @@ export const extractToken = (request: FastifyRequest) => {
 
 export const sendAccessTokenAndSessionId = (
   reply: FastifyReply,
-  { accessToken, sessionId, redirectTo }: SendAccessTokenAndSessionId,
+  { accessToken, sessionId, user, redirectTo }: SendAccessTokenAndSessionId,
 ) => {
   reply.request.session.set("sessionId", sessionId);
 
@@ -125,7 +127,7 @@ export const sendAccessTokenAndSessionId = (
     return;
   }
 
-  reply.send({ accessToken });
+  reply.send({ token: accessToken, sessionId, user });
 };
 
 export const getSessionId = (request: FastifyRequest) => {

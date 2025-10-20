@@ -1,24 +1,13 @@
 import { type RouteHandler } from "fastify";
 import type ProjectsService from "../services/projects.service.js";
-import type { FastifyRequest } from "fastify";
-import { TokenTypes } from "../config/index.js";
 
-interface AuthenticatedRequest extends FastifyRequest {
-  user: {
-    sub: string;
-    jti: string;
-    type: TokenTypes;
-    iat: number;
-    exp: number;
-  };
-}
 
 class ProjectsController {
   constructor(
     private projectsService: ProjectsService
   ) { }
 
-  list: RouteHandler = async (request: AuthenticatedRequest, reply) => {
+  list: RouteHandler = async (request, reply) => {
     try {
       const userId = request.user.sub;
       const projects = await this.projectsService.getAllUsersProjects({ userId });
@@ -30,7 +19,7 @@ class ProjectsController {
     }
   };
 
-  listOwned: RouteHandler = async (request: AuthenticatedRequest, reply) => {
+  listOwned: RouteHandler = async (request, reply) => {
     try {
       const userId = request.user.sub;
       const projects = await this.projectsService.getAllOwnedProjects({ userId });
@@ -42,7 +31,7 @@ class ProjectsController {
     }
   };
 
-  create: RouteHandler = async (request: AuthenticatedRequest, reply) => {
+  create: RouteHandler = async (request, reply) => {
     try {
       const userId = request.user.sub;
       const { name, description } = request.body as { name: string; description?: string };
@@ -60,7 +49,7 @@ class ProjectsController {
     }
   };
 
-  get: RouteHandler = async (request: AuthenticatedRequest, reply) => {
+  get: RouteHandler = async (request, reply) => {
     try {
       const userId = request.user.sub;
       const { id } = request.params as { id: string };
@@ -78,7 +67,7 @@ class ProjectsController {
     }
   };
 
-  update: RouteHandler = async (request: AuthenticatedRequest, reply) => {
+  update: RouteHandler = async (request, reply) => {
     try {
       const userId = request.user.sub;
       const { id } = request.params as { id: string };
@@ -101,7 +90,7 @@ class ProjectsController {
     }
   };
 
-  delete: RouteHandler = async (request: AuthenticatedRequest, reply) => {
+  delete: RouteHandler = async (request, reply) => {
     try {
       const userId = request.user.sub;
       const { id } = request.params as { id: string };
