@@ -2,7 +2,7 @@ import { type RouteHandler } from "fastify";
 import type SessionService from "../services/session.service.js";
 import type TokenService from "../services/token.service.js";
 import type UserService from "../services/user.service.js";
-import type { Register, Login } from "../validations/auth.js";
+import type { RegisterRequest, LoginRequest } from "../schemas/auth.schemas.js";
 import { compare } from "bcrypt";
 
 class AuthController {
@@ -12,16 +12,20 @@ class AuthController {
     private sessionService: SessionService,
   ) { }
 
-  register: RouteHandler<{ Body: Register }> = async (request, reply) => {
-    const { name, email, password } = request.body;
+  register: RouteHandler<{ Body: RegisterRequest }> = async (request, reply) => {
+    const { name, email, password } = request.body as RegisterRequest;
 
-    await this.userService.createUser({ name, email, password });
+    await this.userService.createUser({
+      name: name || '',
+      email,
+      password
+    });
 
     reply.code(201).send();
   };
 
-  login: RouteHandler<{ Body: Login }> = async (request, reply) => {
-    const { email, password } = request.body;
+  login: RouteHandler<{ Body: LoginRequest }> = async (request, reply) => {
+    const { email, password } = request.body as LoginRequest;
     const user = await this.userService.getUserByEmail({ email });
 
     if (!user) {
