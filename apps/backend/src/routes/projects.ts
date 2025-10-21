@@ -1,5 +1,5 @@
 import { type FastifyPluginAsync } from "fastify";
-import * as projectSchemas from "../schemas/projects.schemas.js";
+import { ProjectRouteSchemas } from "../schemas/projects.schemas.js";
 
 const routes: FastifyPluginAsync = async (fastify) => {
   const { projects } = fastify.controllers;
@@ -8,15 +8,15 @@ const routes: FastifyPluginAsync = async (fastify) => {
     method: "GET",
     url: "/",
     preHandler: [fastify.authenticate],
-    schema: projectSchemas.listProjectsSchema,
+    schema: ProjectRouteSchemas.ListProjects,
     handler: projects.list
   });
-  
+
   fastify.route({
     method: "GET",
     url: "/owned",
     preHandler: [fastify.authenticate],
-    schema: projectSchemas.listOwnedProjectsSchema,
+    schema: ProjectRouteSchemas.ListOwnedProjects,
     handler: projects.listOwned
   });
 
@@ -24,7 +24,7 @@ const routes: FastifyPluginAsync = async (fastify) => {
     method: "POST",
     url: "/",
     preHandler: [fastify.authenticate],
-    schema: projectSchemas.createProjectSchema,
+    schema: ProjectRouteSchemas.CreateProject,
     handler: projects.create
   });
 
@@ -32,7 +32,7 @@ const routes: FastifyPluginAsync = async (fastify) => {
     method: "GET",
     url: "/:id",
     preHandler: [fastify.authenticate],
-    schema: projectSchemas.getProjectSchema,
+    schema: ProjectRouteSchemas.GetProject,
     handler: projects.get
   });
 
@@ -40,7 +40,7 @@ const routes: FastifyPluginAsync = async (fastify) => {
     method: "PUT",
     url: "/:id",
     preHandler: [fastify.authenticate],
-    schema: projectSchemas.updateProjectSchema,
+    schema: ProjectRouteSchemas.UpdateProject,
     handler: projects.update
   });
 
@@ -48,7 +48,7 @@ const routes: FastifyPluginAsync = async (fastify) => {
     method: "DELETE",
     url: "/:id",
     preHandler: [fastify.authenticate],
-    schema: projectSchemas.deleteProjectSchema,
+    schema: ProjectRouteSchemas.DeleteProject,
     handler: projects.delete
   });
 };
