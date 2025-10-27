@@ -5,7 +5,7 @@ class TasksService {
 
     getAllUsersTasks = async ({ userId }: { userId: string }) => {
         try {
-            return await this.task.findMany({
+            const tasks = await this.task.findMany({
                 where: {
                     OR: [
                         {
@@ -34,28 +34,23 @@ class TasksService {
                     },
                     owners: {
                         include: {
-                            user: {
-                                select: {
-                                    id: true,
-                                    email: true,
-                                    name: true
-                                }
-                            }
+                            user: true
                         }
                     },
                     members: {
                         include: {
-                            user: {
-                                select: {
-                                    id: true,
-                                    email: true,
-                                    name: true
-                                }
-                            }
+                            user: true
                         }
                     }
                 }
             });
+
+            // Transform the data to flatten owners and members
+            return tasks.map(task => ({
+                ...task,
+                owners: task.owners.map(owner => owner.user),
+                members: task.members.map(member => member.user)
+            }));
         } catch (error) {
             throw error;
         }
@@ -63,7 +58,7 @@ class TasksService {
 
     getAllOwnedTasks = async ({ userId }: { userId: string }) => {
         try {
-            return await this.task.findMany({
+            const tasks = await this.task.findMany({
                 where: {
                     owners: {
                         some: {
@@ -81,17 +76,17 @@ class TasksService {
                     },
                     owners: {
                         include: {
-                            user: {
-                                select: {
-                                    id: true,
-                                    email: true,
-                                    name: true
-                                }
-                            }
+                            user: true
                         }
                     }
                 }
             });
+
+            // Transform the data to flatten owners
+            return tasks.map(task => ({
+                ...task,
+                owners: task.owners.map(owner => owner.user)
+            }));
         } catch (error) {
             throw error;
         }
@@ -99,7 +94,7 @@ class TasksService {
 
     getTasksByProject = async ({ projectId, userId }: { projectId: string; userId: string }) => {
         try {
-            return await this.task.findMany({
+            const tasks = await this.task.findMany({
                 where: {
                     projectId,
                     OR: [
@@ -129,28 +124,23 @@ class TasksService {
                     },
                     owners: {
                         include: {
-                            user: {
-                                select: {
-                                    id: true,
-                                    email: true,
-                                    name: true
-                                }
-                            }
+                            user: true
                         }
                     },
                     members: {
                         include: {
-                            user: {
-                                select: {
-                                    id: true,
-                                    email: true,
-                                    name: true
-                                }
-                            }
+                            user: true
                         }
                     }
                 }
             });
+
+            // Transform the data to flatten owners and members
+            return tasks.map(task => ({
+                ...task,
+                owners: task.owners.map(owner => owner.user),
+                members: task.members.map(member => member.user)
+            }));
         } catch (error) {
             throw error;
         }
@@ -223,30 +213,27 @@ class TasksService {
                     },
                     owners: {
                         include: {
-                            user: {
-                                select: {
-                                    id: true,
-                                    email: true,
-                                    name: true
-                                }
-                            }
+                            user: true
                         }
                     },
                     members: {
                         include: {
-                            user: {
-                                select: {
-                                    id: true,
-                                    email: true,
-                                    name: true
-                                }
-                            }
+                            user: true
                         }
                     }
                 }
             });
 
-            return task;
+            if (!task) {
+                return null;
+            }
+
+            // Transform the data to flatten owners and members
+            return {
+                ...task,
+                owners: task.owners.map(owner => owner.user),
+                members: task.members.map(member => member.user)
+            };
         } catch (error) {
             throw error;
         }

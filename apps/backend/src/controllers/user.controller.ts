@@ -35,6 +35,33 @@ class UserController {
             return reply.code(500).send({ error: "Internal server error" });
         }
     }
+
+    getUserById: RouteHandler = async (request, reply) => {
+        try {
+            const id = (request.params as { id: string }).id;
+            const user = await this.userService.getUserByUid({ uid: id });
+            return reply.code(200).send(user);
+        } catch (error) {
+            request.log.error(error, "Error fetching user by ID");
+            return reply.code(500).send({ error: "Internal server error" });
+        }
+    }
+
+    getUsersByProjects: RouteHandler = async (request, reply) => {
+        try {
+            const projectIds = (request.params as { projectIds: string }).projectIds.split(",");
+            const users = await this.userService.getUsersByProjectIds({ projectIds });
+            return reply.code(200).send({
+                users,
+                total: users.length,
+                page: 1,
+                limit: users.length
+            });
+        } catch (error) {
+            request.log.error(error, "Error fetching users by projects");
+            return reply.code(500).send({ error: "Internal server error" });
+        }
+    }
 }
 
 export default UserController;
