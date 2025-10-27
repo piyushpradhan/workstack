@@ -6,18 +6,21 @@ import { BrowserRouter } from "react-router-dom";
 import './index.css'
 import App from './App';
 import { Toaster } from 'sonner';
-import { ThemeProvider } from '@/contexts/theme-context';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import { queryClient } from '@/api/queryClient';
+import { ModalProvider } from './contexts/ModalContext';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="system" storageKey="workstack-ui-theme">
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools initialIsOpen={false} />
-        <BrowserRouter>
-          <App />
-          <Toaster />
-        </BrowserRouter>
+        <ModalProvider>
+          <BrowserRouter>
+            <App />
+            <Toaster />
+          </BrowserRouter>
+        </ModalProvider>
       </QueryClientProvider>
     </ThemeProvider>
   </StrictMode>,

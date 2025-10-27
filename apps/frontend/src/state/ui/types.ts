@@ -28,6 +28,9 @@ export interface UIActions {
     addNotification: (notification: Omit<Notification, 'id'>) => void;
     removeNotification: (id: string) => void;
     clearNotifications: () => void;
+    getIsCommandPaletteOpen: () => boolean;
+    setIsCommandPaletteOpen: (open: boolean) => void;
+    toggleCommandPalette: () => void;
 }
 
 export interface UIHookReturn extends UIState, UIActions { }

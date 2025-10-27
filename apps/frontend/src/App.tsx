@@ -1,7 +1,9 @@
 import { Outlet, Route, Routes } from "react-router-dom";
 import Login from "@/features/Login";
 import Dashboard from "@/features/Dashboard";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import Layout from "@/components/layout";
+import Projects from "@/features/Projects";
 
 function App() {
   return (
@@ -10,8 +12,11 @@ function App() {
         <Route path="/login" element={<Login />} />
       </Route>
       <Route element={<ProtectedRoute />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/" element={<Dashboard />} />
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/" element={<Dashboard />} />
+        </Route>
       </Route>
     </Routes>
   )

@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
-import { BASE_URL } from './index';
+import { BASE_URL } from '@/api';
 import { AuthError } from './auth/errorHandler';
 
 class ApiClient {

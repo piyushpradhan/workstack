@@ -1,19 +1,21 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { queryClient } from '@/api/queryClient';
 import { login, register, logout, getCurrentUser } from './index';
-import type { LoginRequest, RegisterRequest, User } from './types';
+import type { LoginRequest, RegisterRequest } from './types';
+import type { User } from "@/api/auth/types";
 import { AuthError } from './errorHandler';
 import { stateKeys } from '../../state/utils';
 
 export const authKeys = {
   all: stateKeys.auth.all,
-  user: stateKeys.auth.user(),
-  token: stateKeys.auth.token(),
-  session: stateKeys.auth.session(),
+  user: stateKeys.auth.user,
+  token: stateKeys.auth.token,
+  session: stateKeys.auth.session,
 } as const;
 
 export const useUser = () => {
   return useQuery({
-    queryKey: stateKeys.auth.user(),
+    queryKey: authKeys.user(),
     queryFn: async (): Promise<User | null> => {
       try {
         return await getCurrentUser();
@@ -37,13 +39,10 @@ export const useUser = () => {
 };
 
 export const useLogin = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
-    mutationKey: stateKeys.auth.user(),
+    mutationKey: authKeys.user(),
     mutationFn: async (credentials: LoginRequest): Promise<User | null> => {
       await login(credentials);
-      // After successful login, get the current user and cache it
       try {
         const user = await getCurrentUser();
         return user;
@@ -55,8 +54,7 @@ export const useLogin = () => {
       }
     },
     onSuccess: (user) => {
-      // Store the user data in the cache immediately
-      queryClient.setQueryData(stateKeys.auth.user(), user);
+      queryClient.setQueryData(authKeys.user(), user);
     },
     onError: (error: AuthError) => {
       console.error('Login failed:', error.message);
@@ -65,14 +63,12 @@ export const useLogin = () => {
 };
 
 export const useRegister = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (userData: RegisterRequest): Promise<void> => {
       return register(userData);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: stateKeys.auth.user() });
+      await queryClient.invalidateQueries({ queryKey: authKeys.user() });
     },
     onError: (error: AuthError) => {
       console.error('Registration failed:', error.message);
@@ -81,8 +77,6 @@ export const useRegister = () => {
 };
 
 export const useLogout = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (): Promise<void> => {
       try {
@@ -92,30 +86,27 @@ export const useLogout = () => {
       }
     },
     onSuccess: () => {
-      queryClient.removeQueries({ queryKey: stateKeys.auth.all });
-      queryClient.setQueryData(stateKeys.auth.user(), null);
+      queryClient.removeQueries({ queryKey: authKeys.all });
+      queryClient.setQueryData(authKeys.user(), null);
     },
     onError: (error: AuthError) => {
       console.error('Logout error:', error.message);
-      queryClient.removeQueries({ queryKey: stateKeys.auth.all });
-      queryClient.setQueryData(stateKeys.auth.user(), null);
+      queryClient.removeQueries({ queryKey: authKeys.all });
+      queryClient.setQueryData(authKeys.user(), null);
     },
   });
 };
 
 export const useIsAuthenticated = () => {
-  const queryClient = useQueryClient();
-
-  // Get cached data without making an API call
-  const user = queryClient.getQueryData<User | null>(authKeys.user) ?? null;
-  const isUserQueryLoading = queryClient.isFetching({ queryKey: authKeys.user }) > 0;
+  const user = queryClient.getQueryData<User | null>(authKeys.user()) ?? null;
+  const isUserQueryLoading = queryClient.isFetching({ queryKey: authKeys.user() }) > 0;
 
   return {
     isAuthenticated: Boolean(user),
     isLoading: isUserQueryLoading,
     user,
     error: null,
-    refetchUser: () => queryClient.invalidateQueries({ queryKey: authKeys.user }),
+    refetchUser: () => queryClient.invalidateQueries({ queryKey: authKeys.user() }),
   };
 };
 

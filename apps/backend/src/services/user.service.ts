@@ -63,6 +63,22 @@ class UserService {
       throw error;
     }
   };
+
+  getUsersByProjectIds = async ({ projectIds }: { projectIds: string[] }) => {
+    try {
+      return await this.user.findMany({
+        where: {
+          projectMemberships: {
+            some: {
+              projectId: { in: projectIds }
+            }
+          }
+        }
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
 }
 
 export default UserService;

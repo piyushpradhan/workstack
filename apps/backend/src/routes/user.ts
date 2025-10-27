@@ -11,6 +11,22 @@ const routes: FastifyPluginAsync = async (fastify) => {
         schema: UserRouteSchemas.GetCurrentUser,
         handler: users.getCurrentUser
     });
+
+    fastify.route({
+        method: "GET",
+        url: "/:id",
+        preHandler: [fastify.authenticate],
+        schema: UserRouteSchemas.GetUserById,
+        handler: users.getUserById
+    })
+
+    fastify.route({
+        method: "GET",
+        url: "/projects/:projectIds",
+        preHandler: [fastify.authenticate],
+        schema: UserRouteSchemas.GetUsersByProjects,
+        handler: users.getUsersByProjects
+    })
 };
 
 export default routes;

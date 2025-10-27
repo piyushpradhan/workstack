@@ -5,7 +5,7 @@ class ProjectsService {
 
   getAllUsersProjects = async ({ userId }: { userId: string }) => {
     try {
-      return await this.project.findMany({
+      const projects = await this.project.findMany({
         where: {
           OR: [
             {
@@ -27,28 +27,23 @@ class ProjectsService {
         include: {
           owners: {
             include: {
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  name: true
-                }
-              }
+              user: true
             }
           },
           members: {
             include: {
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  name: true
-                }
-              }
+              user: true
             }
           }
         }
       });
+
+      // Transform the data to flatten owners and members
+      return projects.map(project => ({
+        ...project,
+        owners: project.owners.map(owner => owner.user),
+        members: project.members.map(member => member.user)
+      }));
     } catch (error) {
       throw error;
     }
@@ -56,7 +51,7 @@ class ProjectsService {
 
   getAllOwnedProjects = async ({ userId }: { userId: string }) => {
     try {
-      return await this.project.findMany({
+      const projects = await this.project.findMany({
         where: {
           owners: {
             some: {
@@ -67,17 +62,17 @@ class ProjectsService {
         include: {
           owners: {
             include: {
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  name: true
-                }
-              }
+              user: true
             }
           }
         }
       });
+
+      // Transform the data to flatten owners
+      return projects.map(project => ({
+        ...project,
+        owners: project.owners.map(owner => owner.user)
+      }));
     } catch (error) {
       throw error;
     }
@@ -126,30 +121,27 @@ class ProjectsService {
         include: {
           owners: {
             include: {
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  name: true
-                }
-              }
+              user: true
             }
           },
           members: {
             include: {
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  name: true
-                }
-              }
+              user: true
             }
           }
         }
       });
 
-      return project;
+      if (!project) {
+        return null;
+      }
+
+      // Transform the data to flatten owners and members
+      return {
+        ...project,
+        owners: project.owners.map(owner => owner.user),
+        members: project.members.map(member => member.user)
+      };
     } catch (error) {
       throw error;
     }

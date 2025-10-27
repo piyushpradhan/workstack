@@ -281,6 +281,35 @@ export const UserRouteSchemas = {
             },
         },
     },
+
+    GetUsersByProjects: {
+        description: "Get users that are involved in certain projects",
+        tags: ["Users", "Projects"],
+        summary: "Get users involved in certain projects",
+        security: [{ bearerAuth: [] }],
+        params: Type.Object({
+            projectIds: Type.String({ description: "Comma separated list of project IDs" }),
+        }),
+        response: {
+            200: {
+                description: "Users retrieved successfully",
+                ...UserResponseSchemas.UserList
+            },
+            401: {
+                description: "Unauthorized - invalid or missing token",
+                ...BaseSchemas.Error,
+            },
+            403: {
+                description: "Forbidden - admin access required",
+                ...BaseSchemas.Error,
+            },
+            500: {
+                description: "Internal server error",
+                ...BaseSchemas.Error,
+            },
+        },
+    },
+
 };
 
 // TypeScript types

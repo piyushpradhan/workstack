@@ -1,5 +1,6 @@
-import type { LoginRequest, RegisterRequest, AuthResponse } from './types';
-import apiClient from '../axios';
+import type { LoginRequest, RegisterRequest, AuthResponse } from '@/api/auth/types';
+import apiClient from '@/api/axios';
+import type { User } from '@/state';
 
 export const login = async ({ email, password }: LoginRequest): Promise<void> => {
   await apiClient.post<void>('/auth/login', { email, password });
@@ -13,6 +14,6 @@ export const logout = async (): Promise<void> => {
   return apiClient.post<void>('/auth/logout');
 };
 
-export const getCurrentUser = async (): Promise<AuthResponse['user']> => {
+export const getCurrentUser = async (): Promise<User> => {
   return apiClient.get<AuthResponse['user']>('/users/current');
 };

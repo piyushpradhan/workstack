@@ -11,22 +11,8 @@ const ProjectUser = Type.Object({
     description: 'User information',
 });
 
-const ProjectOwner = Type.Object({
-    user: ProjectUser,
-}, {
-    description: 'Project owner information',
-});
-
-const ProjectMember = Type.Object({
-    user: ProjectUser,
-}, {
-    description: 'Project member information',
-});
-
 export const ProjectSchemas = {
     User: ProjectUser,
-    ProjectOwner,
-    ProjectMember,
 
     Project: Type.Object({
         id: Type.String({
@@ -68,8 +54,8 @@ export const ProjectSchemas = {
         endDate: Type.Optional(BaseSchemas.Timestamp),
         createdAt: BaseSchemas.Timestamp,
         updatedAt: BaseSchemas.Timestamp,
-        owners: Type.Array(ProjectOwner),
-        members: Type.Array(ProjectMember),
+        owners: Type.Array(ProjectUser),
+        members: Type.Array(ProjectUser),
     }, {
         description: 'Project with relationships',
     }),
@@ -92,7 +78,7 @@ export const ProjectSchemas = {
         endDate: Type.Optional(BaseSchemas.Timestamp),
         createdAt: BaseSchemas.Timestamp,
         updatedAt: BaseSchemas.Timestamp,
-        owners: Type.Array(ProjectOwner),
+        owners: Type.Array(ProjectUser),
     }, {
         description: 'Project with owners only',
     }),
