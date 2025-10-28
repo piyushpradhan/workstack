@@ -4,6 +4,7 @@ import Dashboard from "@/features/Dashboard";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Layout from "@/components/layout";
 import Projects from "@/features/Projects";
+import ProjectDetail from "@/features/ProjectDetail";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/" element={<Dashboard />} />
         </Route>
       </Route>

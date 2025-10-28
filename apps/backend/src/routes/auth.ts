@@ -17,6 +17,13 @@ const routes: FastifyPluginAsync = async (fastify) => {
     schema: AuthRouteSchemas.Login,
     handler: auth.login,
   });
+
+  fastify.route({
+    method: "POST",
+    url: "/refresh",
+    schema: AuthRouteSchemas.RefreshToken,
+    handler: auth.refresh,
+  });
 };
 
 export default routes;

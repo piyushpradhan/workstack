@@ -2,7 +2,7 @@ import { type RouteHandler } from "fastify";
 import type SessionService from "../services/session.service.js";
 import type TokenService from "../services/token.service.js";
 import type UserService from "../services/user.service.js";
-import type { RegisterRequest, LoginRequest } from "../schemas/auth.schemas.js";
+import type { RegisterRequest, LoginRequest, RefreshTokenRequest } from "../schemas/auth.schemas.js";
 import { compare } from "bcrypt";
 
 class AuthController {
@@ -52,6 +52,60 @@ class AuthController {
     });
 
     reply.sendAccessTokenAndSessionId(reply, { accessToken, sessionId, user });
+  };
+
+  refresh: RouteHandler<{ Body: RefreshTokenRequest }> = async (request, reply) => {
+    try {
+      // Get the session ID from the request
+      const sessionId = request.session?.get("sessionId");
+
+      if (!sessionId) {
+        reply.code(401).send({ error: "No session found" });
+        return;
+      }
+
+      // Get the session from database
+      const currentSession = await this.sessionService.getSessionById(sessionId);
+
+      if (!currentSession) {
+        reply.code(401).send({ error: "Session not found" });
+        return;
+      }
+
+      // Check if session is expired
+      if (currentSession.expiresAt < new Date()) {
+        reply.code(401).send({ error: "Session expired" });
+        return;
+      }
+
+      // Get the userId from the session
+      const userId = currentSession.userId;
+
+      // Generate new nonce and refresh the session
+      const nextNonce = this.tokenService.generateNonce();
+      await this.sessionService.refreshSession({
+        sessionId,
+        nonce: currentSession.nonce,
+        nextNonce,
+      });
+
+      // Generate new access token
+      const accessToken = this.tokenService.generateAccessToken({
+        userId,
+        nonce: nextNonce,
+      });
+
+      const user = await this.userService.getUserByUid({ uid: userId });
+
+      if (!user) {
+        reply.code(401).send({ error: "User not found" });
+        return;
+      }
+
+      reply.sendAccessTokenAndSessionId(reply, { accessToken, sessionId, user });
+    } catch (error) {
+      reply.code(401).send({ error: "Invalid or expired token" });
+    }
   };
 }
 

@@ -74,6 +74,11 @@ export class SessionService {
       where: { userId },
     });
 
+  getSessionById = async (sessionId: string) =>
+    this.session.findUnique({
+      where: { id: sessionId },
+    });
+
   deleteSessionsById = async (sessionId: string) => {
     try {
       return await this.session.delete({

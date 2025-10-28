@@ -22,7 +22,7 @@ export const config = {
 
   // JWT Configuration
   JWT_SECRET: process.env.JWT_SECRET ?? "super-secret-key-change-in-production",
-  JWT_EXPIRY: parseInt(process.env.JWT_EXPIRY ?? "604800000"),
+  JWT_EXPIRY: parseInt(process.env.JWT_EXPIRY ?? "2592000000"), // 30 days
   JWT_REFRESH_EXPIRY: parseInt(process.env.JWT_REFRESH_EXPIRY ?? "2592000000"),
 
   RESET_PASSWORD_EXPIRY: parseInt(
@@ -33,7 +33,7 @@ export const config = {
   SESSION_EXPIRY: parseInt(process.env.SESSION_EXPIRY ?? "604800000"), // 7 days in ms
   REFRESH_TOKEN_EXPIRY: parseInt(
     process.env.REFRESH_TOKEN_EXPIRY ?? "2592000000",
-  ), // 30 days in ms
+  ), // 30 days 
 
   // Security Configuration
   BCRYPT_ROUNDS: parseInt(process.env.BCRYPT_ROUNDS ?? "12"),
