@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -71,11 +71,9 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 }
 
-// Hook for functional components to handle errors
 export const useErrorHandler = () => {
     const handleError = (error: Error, context?: string) => {
         console.error(`Error in ${context || 'component'}:`, error);
-        // You could integrate with error reporting service here
     };
 
     return { handleError };

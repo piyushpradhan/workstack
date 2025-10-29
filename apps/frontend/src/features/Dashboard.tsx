@@ -12,19 +12,19 @@ import { motion } from 'motion/react';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { useAuth } from '@/api/auth/queries';
 import { useAllProjects } from '@/api/projects/queries';
+import { useTasks, useTaskStats } from '@/api/tasks/queries';
 import { TaskModal } from '@/components/tasks/TaskModal';
 import { ProjectModal } from '@/components/projects/ProjectModal';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { useErrorHandler } from '@/components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const { user: currentUser, isLoading: authLoading, error: authError } = useAuth();
     const { data: projects = [], isLoading: projectsLoading, error: projectsError, refetch: refetchProjects } = useAllProjects();
-    const { handleError } = useErrorHandler();
+    const { ownedTasks, isLoading: tasksLoading, ownedTasksError: tasksError } = useTasks();
+    const taskStats = useTaskStats();
 
-    // Handle authentication loading
     if (authLoading) {
         return (
             <div className="p-4 md:p-6">
@@ -38,7 +38,6 @@ const Dashboard = () => {
         );
     }
 
-    // Handle authentication error
     if (authError) {
         return (
             <div className="p-4 md:p-6">
@@ -51,7 +50,7 @@ const Dashboard = () => {
                             Authentication Error
                         </h2>
                         <p className="text-muted-foreground mb-4">
-                            {authError.message || 'Failed to load user data. Please try again.'}
+                            {(authError as Error)?.message || 'Failed to load user data. Please try again.'}
                         </p>
                         <Button onClick={() => navigate('/login')} variant="default">
                             Go to Login
@@ -62,28 +61,25 @@ const Dashboard = () => {
         );
     }
 
-    // Redirect if not authenticated
     if (!currentUser) {
         navigate('/login');
         return null;
     }
 
-    // Handle projects loading
-    if (projectsLoading) {
+    if (projectsLoading || tasksLoading) {
         return (
             <div className="p-4 md:p-6">
                 <div className="flex items-center justify-center min-h-[400px]">
                     <div className="text-center">
                         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                        <p className="text-muted-foreground">Loading projects...</p>
+                        <p className="text-muted-foreground">Loading...</p>
                     </div>
                 </div>
             </div>
         );
     }
 
-    // Handle projects error
-    if (projectsError) {
+    if (projectsError || tasksError) {
         return (
             <div className="p-4 md:p-6">
                 <div className="flex items-center justify-center min-h-[400px]">
@@ -92,12 +88,12 @@ const Dashboard = () => {
                             <AlertCircle className="w-8 h-8 text-destructive" />
                         </div>
                         <h2 className="text-lg font-semibold text-foreground mb-2">
-                            Failed to load projects
+                            Failed to load data
                         </h2>
                         <p className="text-muted-foreground mb-4">
-                            {projectsError.message || 'Something went wrong while loading your projects.'}
+                            {(projectsError || tasksError)?.message || 'Something went wrong while loading your data.'}
                         </p>
-                        <Button onClick={() => refetchProjects()} variant="outline" className="gap-2">
+                        <Button onClick={() => { refetchProjects(); }} variant="outline" className="gap-2">
                             <RefreshCw className="w-4 h-4" />
                             Try Again
                         </Button>
@@ -107,14 +103,9 @@ const Dashboard = () => {
         );
     }
 
-    // TODO: Implement task hooks when task API is ready
-    // For now, we'll show empty states instead of hardcoded empty arrays
-    const tasks: any[] = [];
-    const myTasks = tasks.filter(task => task.ownerId === currentUser.id);
-    const overdueTasks = tasks.filter(
-        t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'DONE' && t.status !== 'CANCELLED'
-    );
-    const completedTasks = tasks.filter(t => t.status === 'DONE');
+    const myTasks = ownedTasks;
+    const overdueTasks = taskStats.overdue;
+    const completedTasks = taskStats.completed;
     const recentTasks = [...myTasks]
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
         .slice(0, 5);
@@ -136,14 +127,14 @@ const Dashboard = () => {
         },
         {
             label: 'Overdue',
-            value: overdueTasks.length,
+            value: overdueTasks,
             icon: AlertCircle,
             color: 'destructive',
             link: '/tasks',
         },
         {
             label: 'Completed',
-            value: completedTasks.length,
+            value: completedTasks,
             icon: TrendingUp,
             color: 'primary',
             link: '/tasks',

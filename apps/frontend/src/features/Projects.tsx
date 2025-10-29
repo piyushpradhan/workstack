@@ -21,7 +21,6 @@ const Projects = () => {
     const { openModal } = useModal();
     const { handleError } = useErrorHandler();
 
-    // Memoize filtered projects for performance
     const filteredProjects = useMemo(() => {
         if (!projects || projects.length === 0) return [];
 
@@ -38,7 +37,6 @@ const Projects = () => {
         });
     }, [projects, searchQuery, filter, currentUser?.id, handleError]);
 
-    // Handle loading state
     if (isLoading) {
         return (
             <div className="p-4 md:p-6">
@@ -52,7 +50,6 @@ const Projects = () => {
         );
     }
 
-    // Handle error state
     if (error) {
         return (
             <div className="p-4 md:p-6">
@@ -158,7 +155,6 @@ const Projects = () => {
                     </div>
                 </div>
 
-                {/* Projects Grid/List */}
                 {filteredProjects.length > 0 ? (
                     <motion.div
                         layout

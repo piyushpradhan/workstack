@@ -122,6 +122,7 @@ class TasksController {
                 updateData
             });
 
+
             if (!task) {
                 return reply.code(404).send({ error: "Task not found" });
             }

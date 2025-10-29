@@ -97,31 +97,9 @@ class TasksService {
             const tasks = await this.task.findMany({
                 where: {
                     projectId,
-                    OR: [
-                        {
-                            owners: {
-                                some: {
-                                    userId: userId
-                                }
-                            }
-                        },
-                        {
-                            members: {
-                                some: {
-                                    userId: userId
-                                }
-                            }
-                        }
-                    ]
                 },
                 include: {
-                    project: {
-                        select: {
-                            id: true,
-                            name: true,
-                            description: true
-                        }
-                    },
+                    project: true,
                     owners: {
                         include: {
                             user: true
@@ -255,15 +233,9 @@ class TasksService {
         }
     }) => {
         try {
-            // First check if user is an owner of the task
             const task = await this.task.findFirst({
                 where: {
-                    id: taskId,
-                    owners: {
-                        some: {
-                            userId: userId
-                        }
-                    }
+                    id: taskId
                 }
             });
 
@@ -283,12 +255,17 @@ class TasksService {
                 updatePayload.completedAt = null;
             }
 
-            return await this.task.update({
+            const updatedTask = await this.task.update({
                 where: {
                     id: taskId
                 },
                 data: updatePayload
             });
+
+            return {
+                ...updatedTask,
+                projectId: task.projectId
+            }
         } catch (error) {
             throw error;
         }

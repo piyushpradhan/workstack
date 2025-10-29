@@ -31,7 +31,6 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
     const [collapsed, setCollapsed] = useState(false);
     const { user: currentUser, isLoading: userLoading } = useAuth();
 
-    // Close mobile sidebar on route change
     useEffect(() => {
         if (isMobileOpen && onMobileClose) {
             onMobileClose();

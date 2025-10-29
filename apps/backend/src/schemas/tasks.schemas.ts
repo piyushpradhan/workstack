@@ -241,7 +241,13 @@ export const updateTaskSchema = {
     response: {
         200: {
             description: "Task updated successfully",
-            ...taskSchema
+            ...{
+                ...taskSchema,
+                properties: {
+                    ...taskSchema.properties,
+                    projectId: { type: "string" }
+                }
+            }
         },
         400: {
             description: "Bad request - validation error",

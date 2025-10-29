@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useAuth } from '@/api/auth/queries';
 import { useAllProjects } from '@/api/projects/queries';
+import { useCreateTask } from '@/api/tasks/queries';
 import type { TaskStatus, TaskPriority } from '@/state/tasks/types';
 import { useUsers } from '@/api/users/queries';
 import type { User } from '@/api/users/types';
@@ -18,6 +19,7 @@ export function TaskModal() {
     const { user: currentUser } = useAuth();
     const { data: projects = [] } = useAllProjects();
     const { allProjectUsers } = useUsers();
+    const createTaskMutation = useCreateTask();
 
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -49,8 +51,30 @@ export function TaskModal() {
             toast.error('Please select a project');
             return;
         }
-        toast.success('Task created successfully');
-        closeModal('task');
+
+        if (!ownerId) {
+            toast.error('Please select an assignee');
+            return;
+        }
+
+        createTaskMutation.mutate({
+            title: title.trim(),
+            description: description.trim() || undefined,
+            status,
+            priority,
+            dueDate: dueDate || undefined,
+            projectId,
+            ownerId,
+            memberIds: [ownerId]
+        }, {
+            onSuccess: () => {
+                toast.success('Task created successfully');
+                closeModal('task');
+            },
+            onError: (error) => {
+                toast.error(error.message || 'Failed to create task');
+            }
+        });
     };
 
     return (
@@ -149,8 +173,9 @@ export function TaskModal() {
                         </Button>
                         <Button
                             type="submit"
+                            disabled={createTaskMutation.isPending}
                         >
-                            Create Task
+                            {createTaskMutation.isPending ? 'Creating...' : 'Create Task'}
                         </Button>
                     </div>
                 </form>
