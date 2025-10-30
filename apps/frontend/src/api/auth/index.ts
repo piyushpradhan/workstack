@@ -1,6 +1,6 @@
-import type { LoginRequest, RegisterRequest, AuthResponse } from '@/api/auth/types';
+import type { LoginRequest, RegisterRequest } from '@/api/auth/types';
 import apiClient from '@/api/axios';
-import type { User } from '@/state';
+import type { User } from '@/api/users/types';
 
 export const login = async ({ email, password }: LoginRequest): Promise<void> => {
   await apiClient.post<void>('/auth/login', { email, password });
@@ -15,9 +15,9 @@ export const logout = async (): Promise<void> => {
 };
 
 export const getCurrentUser = async (): Promise<User> => {
-  return apiClient.get<AuthResponse['user']>('/users/current');
+  return apiClient.get<User>('/users/current');
 };
 
 export const updateCurrentUser = async (payload: Partial<Pick<User, 'name' | 'email'>>): Promise<User> => {
-  return apiClient.patch<AuthResponse['user']>('/users/current', payload);
+  return apiClient.patch<User>('/users/current', payload);
 };
