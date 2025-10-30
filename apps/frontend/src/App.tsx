@@ -5,6 +5,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Layout from "@/components/layout";
 import Projects from "@/features/Projects";
 import ProjectDetail from "@/features/ProjectDetail";
+import Tasks from "./features/Tasks";
+import TaskDetail from "./features/TaskDetail";
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/tasks/:id" element={<TaskDetail />} />
           <Route path="/" element={<Dashboard />} />
         </Route>
       </Route>

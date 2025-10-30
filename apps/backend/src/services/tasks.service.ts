@@ -45,6 +45,8 @@ class TasksService {
                 }
             });
 
+            console.log("ALL TASKS: ", tasks);
+
             // Transform the data to flatten owners and members
             return tasks.map(task => ({
                 ...task,

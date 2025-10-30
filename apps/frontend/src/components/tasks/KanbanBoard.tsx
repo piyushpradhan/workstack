@@ -5,7 +5,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Plus } from 'lucide-react';
 import { useAllTasks, useTasksByProject, useUpdateTask } from '@/api/tasks/queries';
 import type { Task, TaskStatus } from '@/state';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const columns: { status: TaskStatus; label: string; color: string }[] = [
   { status: 'TODO', label: 'Todo', color: 'muted' },
@@ -108,9 +108,13 @@ function Column({ status, label, color, tasks, onTaskClick, onAddTask }: ColumnP
 
 export function KanbanBoard() {
   const { id: projectId } = useParams();
-  const { data: tasks = [] } = useTasksByProject(projectId || '');
-  const handleTaskClick = (_task: Task) => {
-    // Task click handler - can be implemented later
+  const { data: tasksByProject = [] } = useTasksByProject(projectId ?? '');
+  const { data: allTasks = [] } = useAllTasks();
+  const tasks = projectId ? tasksByProject : allTasks;
+  const navigate = useNavigate();
+
+  const handleTaskClick = (task: Task) => {
+    navigate(`/tasks/${task.id}`);
   };
 
   const handleAddTask = (_status: TaskStatus) => {

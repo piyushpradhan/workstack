@@ -77,12 +77,19 @@ export const useCreateTask = () => {
     return useMutation({
         mutationFn: createTask,
         onMutate: async (newTaskData) => {
+            // Cancel all outgoing queries to prevent race conditions
+            await queryClient.cancelQueries({ queryKey: taskKeys.lists() });
             await queryClient.cancelQueries({ queryKey: taskKeys.byProject(newTaskData.projectId) });
+            await queryClient.cancelQueries({ queryKey: taskKeys.myTasks() });
 
+            // Snapshot previous values for rollback
+            const previousAllTasks = queryClient.getQueryData<Task[]>(taskKeys.lists());
             const previousProjectTasks = queryClient.getQueryData<Task[]>(
                 taskKeys.byProject(newTaskData.projectId)
             );
+            const previousMyTasks = queryClient.getQueryData<Task[]>(taskKeys.myTasks());
 
+            // Create optimistic task
             const tempId = `temp-${Date.now()}`;
             const optimisticTask: Task = {
                 id: tempId,
@@ -91,29 +98,65 @@ export const useCreateTask = () => {
                 updatedAt: new Date().toISOString(),
             };
 
+            // Optimistically update all task lists
+            queryClient.setQueryData<Task[]>(taskKeys.lists(), (old) => [...(old ?? []), optimisticTask]);
             queryClient.setQueryData<Task[]>(
                 taskKeys.byProject(newTaskData.projectId),
                 (old) => [...(old ?? []), optimisticTask]
             );
 
-            return { previousProjectTasks, projectId: newTaskData.projectId, tempId };
+            // Update myTasks if the task is assigned to current user
+            if (newTaskData.ownerId) {
+                queryClient.setQueryData<Task[]>(taskKeys.myTasks(), (old) =>
+                    old ? [...old, optimisticTask] : [optimisticTask]
+                );
+            }
+
+            return {
+                previousAllTasks,
+                previousProjectTasks,
+                previousMyTasks,
+                projectId: newTaskData.projectId,
+                tempId
+            };
         },
         onError: (_error, _variables, context) => {
+            // Rollback on error
+            if (context?.previousAllTasks) {
+                queryClient.setQueryData(taskKeys.lists(), context.previousAllTasks);
+            }
             if (context?.previousProjectTasks && context.projectId) {
                 queryClient.setQueryData(
                     taskKeys.byProject(context.projectId),
                     context.previousProjectTasks
                 );
             }
+            if (context?.previousMyTasks) {
+                queryClient.setQueryData(taskKeys.myTasks(), context.previousMyTasks);
+            }
         },
-        onSuccess: (newTask: Task) => {
+        onSuccess: (newTask: Task, _variables, context) => {
+            // Replace optimistic task with real one
             queryClient.setQueryData(taskKeys.detail(newTask.id), newTask);
+
+            // Update all lists with the real task
+            queryClient.setQueryData<Task[]>(taskKeys.lists(), (old) =>
+                old?.map(task => task.id === context?.tempId || task.id === newTask.id ? newTask : task) ?? []
+            );
+
             queryClient.setQueryData<Task[]>(
                 taskKeys.byProject(newTask.projectId),
-                (old) => old?.map(task => task.id.startsWith('temp-') ? newTask : task) ?? []
+                (old) => old?.map(task => task.id === context?.tempId || task.id === newTask.id ? newTask : task) ?? []
             );
+
+            if (newTask.ownerId) {
+                queryClient.setQueryData<Task[]>(taskKeys.myTasks(), (old) =>
+                    old?.map(task => task.id === context?.tempId || task.id === newTask.id ? newTask : task) ?? []
+                );
+            }
         },
         onSettled: () => {
+            // Invalidate to ensure consistency
             queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
             queryClient.invalidateQueries({ queryKey: taskKeys.myTasks() });
         },
@@ -128,7 +171,10 @@ export const useUpdateTask = () => {
         mutationFn: ({ id, data }: { id: string; data: UpdateTaskRequest }) =>
             updateTask(id, data),
         onMutate: async ({ id, data }) => {
+            // Cancel all outgoing queries to prevent race conditions
             await queryClient.cancelQueries({ queryKey: taskKeys.detail(id) });
+            await queryClient.cancelQueries({ queryKey: taskKeys.lists() });
+            await queryClient.cancelQueries({ queryKey: taskKeys.myTasks() });
 
             const currentTask = queryClient.getQueryData<Task>(taskKeys.detail(id));
             if (!currentTask) return null;
@@ -136,40 +182,82 @@ export const useUpdateTask = () => {
             const projectId = currentTask.projectId;
             await queryClient.cancelQueries({ queryKey: taskKeys.byProject(projectId) });
 
+            const previousAllTasks = queryClient.getQueryData<Task[]>(taskKeys.lists());
             const previousProjectTasks = queryClient.getQueryData<Task[]>(
                 taskKeys.byProject(projectId)
             );
+            const previousMyTasks = queryClient.getQueryData<Task[]>(taskKeys.myTasks());
+            const previousTask = currentTask;
 
-            if (previousProjectTasks) {
-                const optimisticTask = { ...currentTask, ...data };
+            const optimisticTask = { ...currentTask, ...data, updatedAt: new Date().toISOString() };
+
+            queryClient.setQueryData<Task>(taskKeys.detail(id), optimisticTask);
+            queryClient.setQueryData<Task[]>(
+                taskKeys.lists(),
+                (old) => old?.map(task => task.id === id ? optimisticTask : task) ?? []
+            );
+            queryClient.setQueryData<Task[]>(
+                taskKeys.byProject(projectId),
+                (old) => old?.map(task => task.id === id ? optimisticTask : task) ?? []
+            );
+
+            // Update myTasks if task is assigned to someone
+            if (currentTask.ownerId) {
                 queryClient.setQueryData<Task[]>(
-                    taskKeys.byProject(projectId),
+                    taskKeys.myTasks(),
                     (old) => old?.map(task => task.id === id ? optimisticTask : task) ?? []
                 );
-                queryClient.setQueryData<Task>(taskKeys.detail(id), optimisticTask);
             }
 
-            return { previousProjectTasks, projectId, previousTask: currentTask };
+            return {
+                previousAllTasks,
+                previousProjectTasks,
+                previousMyTasks,
+                projectId,
+                previousTask
+            };
         },
         onError: (_error, variables, context) => {
+            // Rollback on error
+            if (context?.previousAllTasks) {
+                queryClient.setQueryData(taskKeys.lists(), context.previousAllTasks);
+            }
             if (context?.previousProjectTasks && context.projectId) {
                 queryClient.setQueryData(
                     taskKeys.byProject(context.projectId),
                     context.previousProjectTasks
                 );
             }
+            if (context?.previousMyTasks) {
+                queryClient.setQueryData(taskKeys.myTasks(), context.previousMyTasks);
+            }
             if (context?.previousTask) {
                 queryClient.setQueryData(taskKeys.detail(variables.id), context.previousTask);
             }
         },
         onSuccess: (updatedTask: Task) => {
+            // Replace optimistic updates with real data
             queryClient.setQueryData(taskKeys.detail(updatedTask.id), updatedTask);
+
+            // Update all lists with the real task
+            queryClient.setQueryData<Task[]>(
+                taskKeys.lists(),
+                (old) => old?.map(task => task.id === updatedTask.id ? updatedTask : task) ?? []
+            );
             queryClient.setQueryData<Task[]>(
                 taskKeys.byProject(updatedTask.projectId),
                 (old) => old?.map(task => task.id === updatedTask.id ? updatedTask : task) ?? []
             );
+
+            if (updatedTask.ownerId) {
+                queryClient.setQueryData<Task[]>(
+                    taskKeys.myTasks(),
+                    (old) => old?.map(task => task.id === updatedTask.id ? updatedTask : task) ?? []
+                );
+            }
         },
         onSettled: () => {
+            // Invalidate to ensure consistency
             queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
             queryClient.invalidateQueries({ queryKey: taskKeys.myTasks() });
         },
@@ -182,24 +270,56 @@ export const useDeleteTask = () => {
     return useMutation({
         mutationFn: deleteTask,
         onMutate: async (deletedTaskId) => {
+            // Cancel all outgoing queries to prevent race conditions
+            await queryClient.cancelQueries({ queryKey: taskKeys.detail(deletedTaskId) });
+            await queryClient.cancelQueries({ queryKey: taskKeys.lists() });
+            await queryClient.cancelQueries({ queryKey: taskKeys.myTasks() });
+
             const currentTask = queryClient.getQueryData<Task>(taskKeys.detail(deletedTaskId));
             if (!currentTask) return null;
 
             const projectId = currentTask.projectId;
             await queryClient.cancelQueries({ queryKey: taskKeys.byProject(projectId) });
 
+            // Snapshot previous values for rollback
+            const previousAllTasks = queryClient.getQueryData<Task[]>(taskKeys.lists());
             const previousProjectTasks = queryClient.getQueryData<Task[]>(
                 taskKeys.byProject(projectId)
             );
+            const previousMyTasks = queryClient.getQueryData<Task[]>(taskKeys.myTasks());
+            const deletedTask = currentTask;
 
+            // Optimistically remove task from all lists
+            queryClient.setQueryData<Task[]>(
+                taskKeys.lists(),
+                (old) => old?.filter(task => task.id !== deletedTaskId) ?? []
+            );
             queryClient.setQueryData<Task[]>(
                 taskKeys.byProject(projectId),
                 (old) => old?.filter(task => task.id !== deletedTaskId) ?? []
             );
 
-            return { previousProjectTasks, projectId, deletedTask: currentTask };
+            // Remove from myTasks if applicable
+            if (currentTask.ownerId) {
+                queryClient.setQueryData<Task[]>(
+                    taskKeys.myTasks(),
+                    (old) => old?.filter(task => task.id !== deletedTaskId) ?? []
+                );
+            }
+
+            return {
+                previousAllTasks,
+                previousProjectTasks,
+                previousMyTasks,
+                projectId,
+                deletedTask
+            };
         },
         onError: (_error, deletedTaskId, context) => {
+            // Rollback on error
+            if (context?.previousAllTasks) {
+                queryClient.setQueryData(taskKeys.lists(), context.previousAllTasks);
+            }
             if (context?.previousProjectTasks && context.projectId && context.deletedTask) {
                 queryClient.setQueryData(
                     taskKeys.byProject(context.projectId),
@@ -207,11 +327,16 @@ export const useDeleteTask = () => {
                 );
                 queryClient.setQueryData(taskKeys.detail(deletedTaskId), context.deletedTask);
             }
+            if (context?.previousMyTasks) {
+                queryClient.setQueryData(taskKeys.myTasks(), context.previousMyTasks);
+            }
         },
         onSuccess: (_data, deletedTaskId) => {
+            // Remove the detail query
             queryClient.removeQueries({ queryKey: taskKeys.detail(deletedTaskId) });
         },
         onSettled: () => {
+            // Invalidate to ensure consistency
             queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
             queryClient.invalidateQueries({ queryKey: taskKeys.myTasks() });
         },

@@ -199,7 +199,9 @@ const Dashboard = () => {
                                     <TaskCard
                                         key={task.id}
                                         task={task}
-                                        onClick={() => { }}
+                                        onClick={() => {
+                                            navigate(`/tasks/${task.id}`);
+                                        }}
                                     />
                                 ))
                             ) : (
