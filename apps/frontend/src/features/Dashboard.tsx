@@ -234,7 +234,9 @@ const Dashboard = () => {
                                     return (
                                         <div
                                             key={task.id}
-                                            onClick={() => { }}
+                                            onClick={() => {
+                                                navigate(`/tasks/${task.id}`);
+                                            }}
                                             className="bg-muted border border-border rounded-md p-2.5 md:p-3 hover:border-border/80 transition-smooth cursor-pointer shadow-sm"
                                             role="button"
                                             tabIndex={0}

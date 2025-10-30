@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Command,
     CommandDialog,
     CommandEmpty,
     CommandGroup,
@@ -18,7 +17,6 @@ import {
     LogOut,
     Search
 } from 'lucide-react';
-import { useUIState } from '@/state/ui/state';
 import { useAuth } from '@/api/auth/queries';
 import { useAllProjects } from '@/api/projects/queries';
 import { useModal } from '@/contexts/ModalContext';
@@ -27,33 +25,50 @@ export function CommandPalette() {
     const navigate = useNavigate();
     const { logout } = useAuth();
     const { data: projects = [] } = useAllProjects();
-    const { getIsCommandPaletteOpen, setIsCommandPaletteOpen, toggleCommandPalette } = useUIState();
-    const [search, setSearch] = useState('');
+    const [isOpen, setIsOpen] = useState(false);
 
     const { openModal } = useModal();
 
     useEffect(() => {
-        const down = (e: KeyboardEvent) => {
+        const onKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
-                toggleCommandPalette();
+                setIsOpen(prev => !prev);
             }
             if (e.key === 'Escape') {
-                setIsCommandPaletteOpen(false);
+                setIsOpen(false);
             }
         };
 
-        document.addEventListener('keydown', down);
-        return () => document.removeEventListener('keydown', down);
-    }, [getIsCommandPaletteOpen, setIsCommandPaletteOpen, toggleCommandPalette]);
+        const onOpen = (_e: Event) => setIsOpen(true);
+        const onToggle = (_e: Event) => setIsOpen(prev => !prev);
+
+        document.addEventListener('keydown', onKeyDown, true);
+        window.addEventListener('command-palette-open', onOpen as EventListener);
+        window.addEventListener('command-palette-toggle', onToggle as EventListener);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).openCommandPalette = () => setIsOpen(true);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).toggleCommandPalette = () => setIsOpen((prev) => !prev);
+        return () => {
+            document.removeEventListener('keydown', onKeyDown, true);
+            window.removeEventListener('command-palette-open', onOpen as EventListener);
+            window.removeEventListener('command-palette-toggle', onToggle as EventListener);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            delete (window as any).openCommandPalette;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            delete (window as any).toggleCommandPalette;
+        };
+    }, []);
 
     const handleSelect = (callback: () => void) => {
         callback();
-        setIsCommandPaletteOpen(false);
+        setIsOpen(false);
     };
 
     return (
-        <CommandDialog open={getIsCommandPaletteOpen()} onOpenChange={setIsCommandPaletteOpen}>
+        <CommandDialog open={isOpen} onOpenChange={setIsOpen}>
             <CommandInput placeholder="Type a command or search..." />
             <CommandList>
                 <CommandEmpty>No results found.</CommandEmpty>

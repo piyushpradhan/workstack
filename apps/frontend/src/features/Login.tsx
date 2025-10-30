@@ -181,14 +181,12 @@ const Login = () => {
 
             <div className="text-center">
               <p className="text-muted-foreground text-sm">
-                Don't have an account?{' '}
-                <Link
-                  to="/register"
-                  className="text-primary hover:underline font-medium"
-                >
-                  Sign up
-                </Link>
+                If you don't have an account, use these demo credentials:
               </p>
+              <div className="mt-2 inline-block text-left text-xs text-muted-foreground px-2 py-1 border rounded-sm">
+                <div className="flex items-center gap-2"><span className="font-medium w-16">email:</span> <code className="bg-transparent text-muted-foreground">demo@workstack.app</code></div>
+                <div className="flex items-center gap-2"><span className="font-medium w-16">password:</span> <code className="bg-transparent text-muted-foreground">demo@123</code></div>
+              </div>
             </div>
           </div>
         </motion.div>

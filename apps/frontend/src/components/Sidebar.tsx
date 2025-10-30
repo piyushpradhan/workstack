@@ -43,7 +43,7 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
             animate={{ width: collapsed ? 64 : 240 }}
             className="border-r flex flex-col h-screen"
         >
-            <div className="p-3 flex items-center justify-between border-b dark:border-gray-700">
+            <div className="px-3 py-2 flex items-center justify-between border-b dark:border-gray-700">
                 {!collapsed && (
                     <motion.div
                         initial={{ opacity: 0 }}

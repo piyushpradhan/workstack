@@ -8,14 +8,13 @@ import {
     FolderKanban,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useUIState } from "@/state/ui/state";
 import { useModal } from "@/contexts/ModalContext";
 
 interface TopNavProps {
@@ -23,9 +22,7 @@ interface TopNavProps {
 }
 
 export function TopNav({ onMobileMenuClick }: TopNavProps) {
-    const navigate = useNavigate();
     const location = useLocation();
-    const { setIsCommandPaletteOpen, getIsCommandPaletteOpen } = useUIState();
     const { openModal } = useModal();
 
     const getPageTitle = () => {
@@ -38,14 +35,22 @@ export function TopNav({ onMobileMenuClick }: TopNavProps) {
         return "Workstack";
     };
 
-    const isCommandPaletteOpen = getIsCommandPaletteOpen();
+    const openCommandPalette = () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const api = (window as any).openCommandPalette as (() => void) | undefined;
+        if (typeof api === 'function') {
+            api();
+        } else {
+            window.dispatchEvent(new Event('command-palette-open'));
+        }
+    };
 
     return (
         <div
             className="border-b dark:border-gray-700 dark:bg-gray-900 sticky top-0 z-10 backdrop-blur-sm"
             style={{ boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.1)" }}
         >
-            <div className="flex items-center justify-between px-3 md:px-4 py-2.5 gap-2 md:gap-3">
+            <div className="flex items-center justify-between px-3 md:px-4 py-2 gap-2 md:gap-3">
                 <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                     <Button
                         onClick={onMobileMenuClick}
@@ -59,7 +64,7 @@ export function TopNav({ onMobileMenuClick }: TopNavProps) {
                     </h1>
 
                     <Button
-                        onClick={() => setIsCommandPaletteOpen(!isCommandPaletteOpen)}
+                        onClick={openCommandPalette}
                         className="hidden bg-background hover:bg-secondary sm:flex items-center gap-2 px-2.5 py-1.5 dark:bg-gray-800 border dark:border-gray-700 rounded text-gray-500 hover:border-gray-700 dark:hover:border-gray-600 transition-smooth max-w-md w-full shadow-sm"
                     >
                         <Search className="w-3.5 h-3.5 flex-shrink-0" />
@@ -76,7 +81,7 @@ export function TopNav({ onMobileMenuClick }: TopNavProps) {
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setIsCommandPaletteOpen(!isCommandPaletteOpen)}
+                        onClick={openCommandPalette}
                         className="sm:hidden bg-gray-50 dark:bg-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 border dark:border-gray-700 shadow-sm transition-smooth p-2"
                     >
                         <Search className="w-4 h-4" />
