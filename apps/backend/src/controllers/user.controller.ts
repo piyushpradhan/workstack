@@ -62,6 +62,26 @@ class UserController {
             return reply.code(500).send({ error: "Internal server error" });
         }
     }
+
+    updateCurrentUser: RouteHandler = async (request, reply) => {
+        try {
+            const uid = request.user.sub;
+            const { name, email } = request.body as { name?: string; email?: string };
+
+            if (!name && !email) {
+                return reply.code(400).send({ error: "No update fields provided" });
+            }
+
+            const updated = await this.userService.updateUserByUid({ uid, data: { name, email } });
+            return reply.code(200).send(updated);
+        } catch (error) {
+            request.log.error(error, "Error updating current user");
+            if ((error as any)?.statusCode) {
+                return reply.code((error as any).statusCode).send({ error: (error as any).message });
+            }
+            return reply.code(500).send({ error: "Internal server error" });
+        }
+    }
 }
 
 export default UserController;

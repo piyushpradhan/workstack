@@ -17,3 +17,7 @@ export const logout = async (): Promise<void> => {
 export const getCurrentUser = async (): Promise<User> => {
   return apiClient.get<AuthResponse['user']>('/users/current');
 };
+
+export const updateCurrentUser = async (payload: Partial<Pick<User, 'name' | 'email'>>): Promise<User> => {
+  return apiClient.patch<AuthResponse['user']>('/users/current', payload);
+};

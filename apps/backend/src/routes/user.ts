@@ -13,6 +13,14 @@ const routes: FastifyPluginAsync = async (fastify) => {
     });
 
     fastify.route({
+        method: "PATCH",
+        url: "/current",
+        preHandler: [fastify.authenticate],
+        schema: UserRouteSchemas.UpdateProfile,
+        handler: users.updateCurrentUser
+    });
+
+    fastify.route({
         method: "GET",
         url: "/:id",
         preHandler: [fastify.authenticate],

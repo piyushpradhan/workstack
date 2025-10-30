@@ -1,11 +1,11 @@
 export interface AppSettings {
-    apiUrl: string;
-    debugMode: boolean;
-    autoSave: boolean;
-    cacheTimeout: number;
     theme: 'light' | 'dark' | 'system';
     language: string;
-    timezone: string;
+    profileDisplayName?: string;
+    notificationsInApp?: boolean;
+    notificationsEmail?: boolean;
+    notificationsPush?: boolean;
+    notificationsDigest?: 'off' | 'daily' | 'weekly';
 }
 
 export interface AppNotification {

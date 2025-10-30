@@ -35,6 +35,7 @@ export const UserRequestSchemas = {
             maxLength: 100,
             description: 'User display name',
         })),
+        email: Type.Optional(BaseSchemas.Email),
         avatar: Type.Optional(Type.String({
             description: 'User avatar URL',
         })),

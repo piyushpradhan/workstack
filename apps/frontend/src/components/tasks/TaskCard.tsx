@@ -3,7 +3,6 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { PriorityIndicator } from '@/components/common/PriorityIndicator';
 import { Calendar, User } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useProject } from '@/api/projects/queries';
 
 interface TaskCardProps {
     task: Task;
@@ -12,8 +11,6 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, onClick, isDragging }: TaskCardProps) {
-    const { data: project } = useProject(task.projectId);
-
     const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'DONE' && task.status !== 'CANCELLED';
     const dueDate = task.dueDate ? new Date(task.dueDate) : null;
 

@@ -7,6 +7,7 @@ import Projects from "@/features/Projects";
 import ProjectDetail from "@/features/ProjectDetail";
 import Tasks from "./features/Tasks";
 import TaskDetail from "./features/TaskDetail";
+import Settings from "./features/Settings";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/tasks/:id" element={<TaskDetail />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/" element={<Dashboard />} />
         </Route>
       </Route>

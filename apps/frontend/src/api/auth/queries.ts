@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/api/queryClient';
-import { login, register, logout, getCurrentUser } from './index';
+import { login, register, logout, getCurrentUser, updateCurrentUser } from './index';
 import type { LoginRequest, RegisterRequest } from './types';
 import type { User } from "@/api/auth/types";
 import { AuthError } from './errorHandler';
@@ -115,6 +115,7 @@ export const useAuth = () => {
   const loginMutation = useLogin();
   const registerMutation = useRegister();
   const logoutMutation = useLogout();
+  const updateUserMutation = useUpdateCurrentUser();
 
   return {
     isAuthenticated,
@@ -125,17 +126,34 @@ export const useAuth = () => {
     login: loginMutation.mutate,
     register: registerMutation.mutate,
     logout: logoutMutation.mutate,
+    updateUser: updateUserMutation.mutate,
 
     isLoggingIn: loginMutation.isPending,
     isRegistering: registerMutation.isPending,
     isLoggingOut: logoutMutation.isPending,
+    isUpdatingUser: updateUserMutation.isPending,
 
     loginError: loginMutation.error as AuthError | null,
     registerError: registerMutation.error as AuthError | null,
     logoutError: logoutMutation.error as AuthError | null,
+    updateUserError: updateUserMutation.error as AuthError | null,
 
     loginAsync: loginMutation.mutateAsync,
     registerAsync: registerMutation.mutateAsync,
     logoutAsync: logoutMutation.mutateAsync,
+    updateUserAsync: updateUserMutation.mutateAsync,
   };
+};
+
+export const useUpdateCurrentUser = () => {
+  return useMutation({
+    mutationKey: authKeys.user(),
+    mutationFn: async (payload: Partial<Pick<User, 'name' | 'email'>>): Promise<User | null> => {
+      const user = await updateCurrentUser(payload);
+      return user;
+    },
+    onSuccess: (user) => {
+      queryClient.setQueryData(authKeys.user(), user);
+    },
+  });
 };

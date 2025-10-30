@@ -79,6 +79,26 @@ class UserService {
       throw error;
     }
   };
+
+  updateUserByUid = async ({ uid, data }: { uid: string, data: Partial<Pick<IUserCreate, 'name' | 'email'>> }) => {
+    try {
+      return await this.user.update({
+        where: { id: uid },
+        data,
+      });
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === "P2002") {
+          throw new httpErrors.Conflict("Email already in use");
+        }
+        if (error.code === "P2025") {
+          throw new httpErrors.NotFound("User not found");
+        }
+      }
+
+      throw error;
+    }
+  }
 }
 
 export default UserService;
