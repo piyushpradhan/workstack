@@ -12,7 +12,7 @@ import Settings from "./features/Settings";
 function App() {
   return (
     <Routes>
-      <Route element={<Outlet />} >
+      <Route element={<Outlet />}>
         <Route path="/login" element={<Login />} />
       </Route>
       <Route element={<ProtectedRoute />}>
@@ -27,7 +27,7 @@ function App() {
         </Route>
       </Route>
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

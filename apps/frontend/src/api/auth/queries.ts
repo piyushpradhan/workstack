@@ -1,10 +1,16 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { queryClient } from '@/api/queryClient';
-import { login, register, logout, getCurrentUser, updateCurrentUser } from './index';
-import type { LoginRequest, RegisterRequest } from './types';
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/api/queryClient";
+import {
+  login,
+  register,
+  logout,
+  getCurrentUser,
+  updateCurrentUser,
+} from "./index";
+import type { LoginRequest, RegisterRequest } from "./types";
 import type { User } from "@/api/auth/types";
-import { AuthError } from './errorHandler';
-import { stateKeys } from '../../state/utils';
+import { AuthError } from "./errorHandler";
+import { stateKeys } from "../../state/utils";
 
 export const authKeys = {
   all: stateKeys.auth.all,
@@ -29,7 +35,11 @@ export const useUser = () => {
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: (failureCount, error) => {
-      if (error instanceof AuthError && error.statusCode >= 400 && error.statusCode < 500) {
+      if (
+        error instanceof AuthError &&
+        error.statusCode >= 400 &&
+        error.statusCode < 500
+      ) {
         return false;
       }
       return failureCount < 3;
@@ -57,7 +67,7 @@ export const useLogin = () => {
       queryClient.setQueryData(authKeys.user(), user);
     },
     onError: (error: AuthError) => {
-      console.error('Login failed:', error.message);
+      console.error("Login failed:", error.message);
     },
   });
 };
@@ -71,7 +81,7 @@ export const useRegister = () => {
       await queryClient.invalidateQueries({ queryKey: authKeys.user() });
     },
     onError: (error: AuthError) => {
-      console.error('Registration failed:', error.message);
+      console.error("Registration failed:", error.message);
     },
   });
 };
@@ -82,7 +92,7 @@ export const useLogout = () => {
       try {
         await logout();
       } catch (error) {
-        console.warn('Server logout failed, clearing local state:', error);
+        console.warn("Server logout failed, clearing local state:", error);
       }
     },
     onSuccess: () => {
@@ -90,7 +100,7 @@ export const useLogout = () => {
       queryClient.setQueryData(authKeys.user(), null);
     },
     onError: (error: AuthError) => {
-      console.error('Logout error:', error.message);
+      console.error("Logout error:", error.message);
       queryClient.removeQueries({ queryKey: authKeys.all });
       queryClient.setQueryData(authKeys.user(), null);
     },
@@ -99,14 +109,16 @@ export const useLogout = () => {
 
 export const useIsAuthenticated = () => {
   const user = queryClient.getQueryData<User | null>(authKeys.user()) ?? null;
-  const isUserQueryLoading = queryClient.isFetching({ queryKey: authKeys.user() }) > 0;
+  const isUserQueryLoading =
+    queryClient.isFetching({ queryKey: authKeys.user() }) > 0;
 
   return {
     isAuthenticated: Boolean(user),
     isLoading: isUserQueryLoading,
     user,
     error: null,
-    refetchUser: () => queryClient.invalidateQueries({ queryKey: authKeys.user() }),
+    refetchUser: () =>
+      queryClient.invalidateQueries({ queryKey: authKeys.user() }),
   };
 };
 
@@ -148,7 +160,9 @@ export const useAuth = () => {
 export const useUpdateCurrentUser = () => {
   return useMutation({
     mutationKey: authKeys.user(),
-    mutationFn: async (payload: Partial<Pick<User, 'name' | 'email'>>): Promise<User | null> => {
+    mutationFn: async (
+      payload: Partial<Pick<User, "name" | "email">>,
+    ): Promise<User | null> => {
       const user = await updateCurrentUser(payload);
       return user;
     },

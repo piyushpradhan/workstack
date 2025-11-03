@@ -15,10 +15,12 @@ import { useErrorHandler } from "@/components/ErrorBoundary";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {},
+  );
 
   const { login, isLoggingIn, loginError } = useAuth();
   const { handleError } = useErrorHandler();
@@ -27,15 +29,15 @@ const Login = () => {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
 
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     setErrors(newErrors);
@@ -54,18 +56,18 @@ const Login = () => {
         { email, password },
         {
           onSuccess: () => {
-            toast.success('Welcome back!');
-            navigate('/dashboard');
+            toast.success("Welcome back!");
+            navigate("/dashboard");
           },
           onError: (error) => {
-            handleError(error, 'Login');
-            toast.error(error.message || 'Invalid credentials');
+            handleError(error, "Login");
+            toast.error(error.message || "Invalid credentials");
           },
-        }
+        },
       );
     } catch (error) {
-      handleError(error as Error, 'Login form submission');
-      toast.error('An unexpected error occurred');
+      handleError(error as Error, "Login form submission");
+      toast.error("An unexpected error occurred");
     }
   };
 
@@ -89,11 +91,9 @@ const Login = () => {
               </div>
               <span className="text-foreground text-2xl">Workstack</span>
             </div>
-            <h1 className="mb-2 text-foreground">
-              Welcome back
-            </h1>
+            <h1 className="mb-2 text-foreground">Welcome back</h1>
             <p className="text-muted-foreground">
-              {'Sign in to continue to Workstack'}
+              {"Sign in to continue to Workstack"}
             </p>
           </div>
 
@@ -105,9 +105,15 @@ const Login = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-4"
+              noValidate
+            >
               <div className="flex flex-col gap-2">
-                <Label htmlFor="email" className="text-foreground">Email</Label>
+                <Label htmlFor="email" className="text-foreground">
+                  Email
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -115,7 +121,7 @@ const Login = () => {
                   onChange={(e) => {
                     setEmail(e.target.value);
                     if (errors.email) {
-                      setErrors(prev => ({ ...prev, email: undefined }));
+                      setErrors((prev) => ({ ...prev, email: undefined }));
                     }
                   }}
                   placeholder="Enter your email"
@@ -124,14 +130,20 @@ const Login = () => {
                   aria-describedby={errors.email ? "email-error" : undefined}
                 />
                 {errors.email && (
-                  <p id="email-error" className="text-destructive text-sm" role="alert">
+                  <p
+                    id="email-error"
+                    className="text-destructive text-sm"
+                    role="alert"
+                  >
                     {errors.email}
                   </p>
                 )}
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="password" className="text-foreground">Password</Label>
+                <Label htmlFor="password" className="text-foreground">
+                  Password
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -140,25 +152,37 @@ const Login = () => {
                     onChange={(e) => {
                       setPassword(e.target.value);
                       if (errors.password) {
-                        setErrors(prev => ({ ...prev, password: undefined }));
+                        setErrors((prev) => ({ ...prev, password: undefined }));
                       }
                     }}
                     placeholder="Enter your password"
                     required
                     aria-invalid={!!errors.password}
-                    aria-describedby={errors.password ? "password-error" : undefined}
+                    aria-describedby={
+                      errors.password ? "password-error" : undefined
+                    }
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
                 {errors.password && (
-                  <p id="password-error" className="text-destructive text-sm" role="alert">
+                  <p
+                    id="password-error"
+                    className="text-destructive text-sm"
+                    role="alert"
+                  >
                     {errors.password}
                   </p>
                 )}
@@ -170,10 +194,10 @@ const Login = () => {
                 className="w-full"
                 aria-describedby="login-status"
               >
-                {isLoggingIn ? 'Signing in...' : 'Sign in'}
+                {isLoggingIn ? "Signing in..." : "Sign in"}
               </Button>
               <div id="login-status" className="sr-only" aria-live="polite">
-                {isLoggingIn ? 'Signing in, please wait' : 'Ready to sign in'}
+                {isLoggingIn ? "Signing in, please wait" : "Ready to sign in"}
               </div>
             </form>
 
@@ -184,15 +208,25 @@ const Login = () => {
                 If you don't have an account, use these demo credentials:
               </p>
               <div className="mt-2 inline-block text-left text-xs text-muted-foreground px-2 py-1 border rounded-sm">
-                <div className="flex items-center gap-2"><span className="font-medium w-16">email:</span> <code className="bg-transparent text-muted-foreground">demo@workstack.app</code></div>
-                <div className="flex items-center gap-2"><span className="font-medium w-16">password:</span> <code className="bg-transparent text-muted-foreground">demo@123</code></div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium w-16">email:</span>{" "}
+                  <code className="bg-transparent text-muted-foreground">
+                    demo@workstack.app
+                  </code>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium w-16">password:</span>{" "}
+                  <code className="bg-transparent text-muted-foreground">
+                    demo@123
+                  </code>
+                </div>
               </div>
             </div>
           </div>
         </motion.div>
       </div>
     </ErrorBoundary>
-  )
-}
+  );
+};
 
 export default Login;

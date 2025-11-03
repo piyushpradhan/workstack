@@ -1,6 +1,11 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
-import { BASE_URL } from '@/api';
-import { AuthError } from './auth/errorHandler';
+import axios, {
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type AxiosResponse,
+  type InternalAxiosRequestConfig,
+} from "axios";
+import { BASE_URL } from "@/api";
+import { AuthError } from "./auth/errorHandler";
 
 class ApiClient {
   private axiosInstance: AxiosInstance;
@@ -16,9 +21,9 @@ class ApiClient {
       timeout: 10000,
       withCredentials: true,
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "X-Requested-With": "XMLHttpRequest",
       },
     });
 
@@ -26,7 +31,7 @@ class ApiClient {
   }
 
   private processQueue(error: Error | null) {
-    this.failedQueue.forEach(promise => {
+    this.failedQueue.forEach((promise) => {
       if (error) {
         promise.reject(error);
       } else {
@@ -40,7 +45,7 @@ class ApiClient {
     // No request auth header injection; backend authenticates via HttpOnly cookies
     this.axiosInstance.interceptors.request.use(
       (config) => config,
-      (error) => Promise.reject(error)
+      (error) => Promise.reject(error),
     );
 
     this.axiosInstance.interceptors.response.use(
@@ -58,7 +63,7 @@ class ApiClient {
               this.failedQueue.push({ resolve, reject });
             })
               .then(() => this.axiosInstance(originalRequest))
-              .catch(err => Promise.reject(err));
+              .catch((err) => Promise.reject(err));
           }
 
           originalRequest._retry = true;
@@ -66,18 +71,22 @@ class ApiClient {
 
           try {
             // Attempt to refresh the token
-            await axios.post(`${BASE_URL}/auth/refresh`, {}, {
-              withCredentials: true,
-            });
-            
+            await axios.post(
+              `${BASE_URL}/auth/refresh`,
+              {},
+              {
+                withCredentials: true,
+              },
+            );
+
             this.processQueue(null);
             return this.axiosInstance(originalRequest);
           } catch (refreshError) {
             this.processQueue(refreshError as Error);
-            
+
             // If refresh fails, redirect to login
-            if (window.location.pathname !== '/login') {
-              window.location.href = '/login';
+            if (window.location.pathname !== "/login") {
+              window.location.href = "/login";
             }
             return Promise.reject(refreshError);
           } finally {
@@ -88,16 +97,16 @@ class ApiClient {
         // Handle other errors
         if (error.response) {
           const authError = new AuthError(
-            error.response.data?.message || 'An error occurred',
-            error.response.data?.code || 'UNKNOWN_ERROR',
+            error.response.data?.message || "An error occurred",
+            error.response.data?.code || "UNKNOWN_ERROR",
             error.response.status,
-            error.response.data?.field
+            error.response.data?.field,
           );
           return Promise.reject(authError);
         }
 
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -106,17 +115,29 @@ class ApiClient {
     return response.data;
   }
 
-  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async post<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
     const response = await this.axiosInstance.post<T>(url, data, config);
     return response.data;
   }
 
-  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async put<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
     const response = await this.axiosInstance.put<T>(url, data, config);
     return response.data;
   }
 
-  async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async patch<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
     const response = await this.axiosInstance.patch<T>(url, data, config);
     return response.data;
   }
