@@ -29,12 +29,12 @@ const cookieOptions = ({
     path,
     secure: true,
     sameSite: "none",
+    // Don't set domain for cross-origin cookies in production
+    // The browser will automatically set it to the server's domain
     domain:
       config.APP_ENV === "development"
         ? "localhost"
-        : config.APP_URL
-          ? `.${config.APP_URL}`
-          : undefined,
+        : undefined,
     httpOnly: !accessibleFromJavascript,
     maxAge: lifespan === "destroy" ? 0 : age / 1000,
     expires: lifespan === "destroy" ? new Date(0) : undefined,

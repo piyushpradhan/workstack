@@ -22,7 +22,6 @@ primary_region = "iad"  # Change to your preferred region (e.g., "ord", "sjc", "
   processes = ["app"]
 
 [[services]]
-  http_checks = []
   internal_port = 3000
   processes = ["app"]
   protocol = "tcp"
