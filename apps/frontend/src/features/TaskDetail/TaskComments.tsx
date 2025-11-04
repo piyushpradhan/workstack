@@ -1,6 +1,6 @@
-import { Button } from "../../components/ui/button";
-import { Textarea } from "../../components/ui/textarea";
-import { Avatar } from "../../components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar } from "@/components/ui/avatar";
 import { Trash2 } from "lucide-react";
 
 type Comment = {
@@ -24,7 +24,6 @@ interface TaskCommentsProps {
 export function TaskComments({
   comments,
   currentUserName,
-  onAdd,
   onAddDirect,
   onDelete,
   formatDateTime,

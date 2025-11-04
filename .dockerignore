@@ -1,0 +1,76 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Dependencies (will be installed in container)
+node_modules
+**/node_modules
+.pnpm-store
+
+# Build outputs (will be rebuilt in container)
+dist
+build
+out
+.next
+.nuxt
+.output
+
+# Environment files (use docker-compose env or secrets)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Testing
+coverage
+.nyc_output
+*.lcov
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation (not needed in container)
+README.md
+*.md
+!apps/backend/README.md
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Misc
+.cache
+.temp
+tmp
+temp
+*.pid
+*.seed
+*.pid.lock
+
+# Fastify
+.fastify
+
+# Vite
+.vite
+
+# Prisma (schema will be copied, but migrations handled separately)
+apps/backend/prisma/migrations
+
+

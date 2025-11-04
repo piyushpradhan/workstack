@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { KanbanBoard } from "../components/tasks/KanbanBoard";
-import { ProjectModal } from "../components/projects/ProjectModal";
-import { Button } from "../components/ui/button";
+import { KanbanBoard } from "@/components/tasks/KanbanBoard";
+import { ProjectModal } from "@/components/projects/ProjectModal";
+import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   Settings,
@@ -138,7 +138,7 @@ const ProjectDetail = () => {
 
         {isOwner && (
           <Button
-            onClick={() => {}}
+            onClick={() => { }}
             variant="outline"
             className="gap-2 bg-card border-border text-card-foreground hover:bg-accent w-full sm:w-auto flex-shrink-0"
           >
@@ -179,7 +179,7 @@ const ProjectDetail = () => {
 
       {/* Task Board */}
       <div className="h-full">
-        <KanbanBoard tasks={projectTasks} projectId={id} />
+        <KanbanBoard />
       </div>
 
       <ProjectModal />

@@ -12,7 +12,7 @@ export function Tasks() {
   const { data: tasks } = useAllTasks();
   const { data: projects } = useAllProjects();
   const { allProjectUsers: users } = useUsers();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, _setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<TaskStatus[]>([]);
@@ -63,7 +63,6 @@ export function Tasks() {
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       <TasksHeader
         count={filteredTasks?.length ?? 0}
-        onNewTask={() => setIsModalOpen(true)}
       />
 
       <TasksFilters

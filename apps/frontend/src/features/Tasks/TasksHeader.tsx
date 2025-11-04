@@ -1,9 +1,8 @@
 interface TasksHeaderProps {
   count: number;
-  onNewTask: () => void;
 }
 
-export function TasksHeader({ count, onNewTask }: TasksHeaderProps) {
+export function TasksHeader({ count }: TasksHeaderProps) {
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="min-w-0">

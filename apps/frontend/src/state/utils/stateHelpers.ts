@@ -1,48 +1,46 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { stateKeys } from "./queryKeys";
+import { queryClient } from "@/api/queryClient";
 
 export class StateManager {
-  constructor(private queryClient: ReturnType<typeof useQueryClient>) {}
+  constructor() { }
 
   getData<T>(key: readonly string[]): T | undefined {
-    return this.queryClient.getQueryData<T>(key);
+    return queryClient.getQueryData<T>(key);
   }
 
   setData<T>(key: readonly string[], data: T): void {
-    this.queryClient.setQueryData(key, data);
+    queryClient.setQueryData(key, data);
   }
 
   updateData<T>(
     key: readonly string[],
     updater: (prev: T | undefined) => T,
   ): void {
-    this.queryClient.setQueryData(key, updater);
+    queryClient.setQueryData(key, updater);
   }
 
   removeData(key: readonly string[]): void {
-    this.queryClient.removeQueries({ queryKey: key });
+    queryClient.removeQueries({ queryKey: key });
   }
 
   hasData(key: readonly string[]): boolean {
-    return this.queryClient.getQueryData(key) !== undefined;
+    return queryClient.getQueryData(key) !== undefined;
   }
 
   isLoading(key: readonly string[]): boolean {
-    return this.queryClient.isFetching({ queryKey: key }) > 0;
+    return queryClient.isFetching({ queryKey: key }) > 0;
   }
 
   invalidate(key: readonly string[]): void {
-    this.queryClient.invalidateQueries({ queryKey: key });
+    queryClient.invalidateQueries({ queryKey: key });
   }
 
   clearNamespace(namespace: readonly string[]): void {
-    this.queryClient.removeQueries({ queryKey: namespace });
+    queryClient.removeQueries({ queryKey: namespace });
   }
 }
 
 export const useStateManager = () => {
-  const queryClient = useQueryClient();
-  return new StateManager(queryClient);
+  return new StateManager();
 };
 
 export const createStateHook = <T>(key: readonly string[], defaultValue: T) => {

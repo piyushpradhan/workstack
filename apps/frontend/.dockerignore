@@ -1,0 +1,26 @@
+# Source files (not needed in production)
+src/
+
+# Development config
+vite.config.ts
+tsconfig*.json
+eslint.config.js
+prettier.config.js
+
+# Build output (will be built in container)
+dist
+
+# Tests
+*.test.tsx
+*.test.ts
+*.spec.tsx
+*.spec.ts
+
+# Development dependencies
+node_modules
+
+# Environment
+.env
+.env.*
+
+

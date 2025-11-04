@@ -1,0 +1,25 @@
+# Development files
+*.ts
+!prisma/**/*.ts
+src/
+
+# Build output (will be built in container)
+dist
+
+# Tests
+test/
+*.test.ts
+*.spec.ts
+
+# Development dependencies
+node_modules
+
+# Logs
+*.log
+logs
+
+# Environment
+.env
+.env.*
+
+

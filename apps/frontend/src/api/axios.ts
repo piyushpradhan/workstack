@@ -2,7 +2,6 @@ import axios, {
   type AxiosInstance,
   type AxiosRequestConfig,
   type AxiosResponse,
-  type InternalAxiosRequestConfig,
 } from "axios";
 import { BASE_URL } from "@/api";
 import { AuthError } from "./auth/errorHandler";

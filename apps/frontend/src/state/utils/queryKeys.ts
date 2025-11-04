@@ -1,5 +1,5 @@
-import type { ProjectFilters } from "@/state/projects/state";
 import type { TaskFilters } from "@/state/tasks/state";
+import type { ProjectFilters } from "@/state/projects/state";
 
 export const stateKeys = {
   auth: {

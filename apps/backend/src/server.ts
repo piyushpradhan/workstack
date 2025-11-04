@@ -22,7 +22,6 @@ function getLoggerOptions() {
 
 const app = build({
   trustProxy: true,
-  ignoreTrailingSlash: true,
   logger: getLoggerOptions(),
   ajv: {
     customOptions: {

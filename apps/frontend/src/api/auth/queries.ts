@@ -8,9 +8,9 @@ import {
   updateCurrentUser,
 } from "./index";
 import type { LoginRequest, RegisterRequest } from "./types";
-import type { User } from "@/api/auth/types";
-import { AuthError } from "./errorHandler";
-import { stateKeys } from "../../state/utils";
+import type { User } from "@/api/users/types";
+import { AuthError } from "@/api/auth/errorHandler";
+import { stateKeys } from "@/state/utils";
 
 export const authKeys = {
   all: stateKeys.auth.all,
