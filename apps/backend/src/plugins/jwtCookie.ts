@@ -25,10 +25,16 @@ const cookieOptions = ({
   const age =
     lifespan === "access" ? config.JWT_EXPIRY : config.JWT_REFRESH_EXPIRY;
 
+  // For cross-origin cookies (sameSite: "none"), secure MUST be true
+  // In production, always use secure: true since we're using HTTPS
+  const isProduction = config.APP_ENV !== "development";
+  const secure = isProduction ? true : false;
+  const sameSite = isProduction ? ("none" as const) : ("lax" as const);
+
   return {
     path,
-    secure: true,
-    sameSite: "none",
+    secure,
+    sameSite,
     // Don't set domain for cross-origin cookies in production
     // The browser will automatically set it to the server's domain
     domain:

@@ -23,7 +23,19 @@ const dir = dirname(fileURLToPath(import.meta.url));
 const build = (opts: FastifyServerOptions) => {
   const app: FastifyInstance = fastify(opts);
 
-  app.register(helmet);
+  app.register(helmet, {
+    // Allow cookies to work with cross-origin requests
+    crossOriginEmbedderPolicy: false,
+    // Don't block cookies
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+      },
+    },
+  });
 
   app.register(cors, {
     origin: config.CORS_ORIGIN,
