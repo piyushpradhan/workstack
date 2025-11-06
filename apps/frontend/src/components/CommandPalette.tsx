@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/api/auth/queries";
 import { useAllProjects } from "@/api/projects/queries";
 import { useModal } from "@/contexts/ModalContext";
+import { isTemporaryId } from "@/lib/utils";
 
 export function CommandPalette() {
   const navigate = useNavigate();
@@ -120,17 +121,20 @@ export function CommandPalette() {
           <>
             <CommandSeparator />
             <CommandGroup heading="Projects">
-              {projects.slice(0, 5).map((project) => (
-                <CommandItem
-                  key={project.id}
-                  onSelect={() =>
-                    handleSelect(() => navigate(`/projects/${project.id}`))
-                  }
-                >
-                  <Search className="mr-2 h-4 w-4" />
-                  <span>{project.name}</span>
-                </CommandItem>
-              ))}
+              {projects
+                .filter((project) => !isTemporaryId(project.id))
+                .slice(0, 5)
+                .map((project) => (
+                  <CommandItem
+                    key={project.id}
+                    onSelect={() =>
+                      handleSelect(() => navigate(`/projects/${project.id}`))
+                    }
+                  >
+                    <Search className="mr-2 h-4 w-4" />
+                    <span>{project.name}</span>
+                  </CommandItem>
+                ))}
             </CommandGroup>
           </>
         )}

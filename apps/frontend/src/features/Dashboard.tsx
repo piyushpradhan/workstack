@@ -17,6 +17,7 @@ import { TaskModal } from "@/components/tasks/TaskModal";
 import { ProjectModal } from "@/components/projects/ProjectModal";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
+import { isTemporaryId } from "@/lib/utils";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -245,7 +246,9 @@ const Dashboard = () => {
                     key={task.id}
                     task={task}
                     onClick={() => {
-                      navigate(`/tasks/${task.id}`);
+                      if (!isTemporaryId(task.id)) {
+                        navigate(`/tasks/${task.id}`);
+                      }
                     }}
                   />
                 ))
@@ -282,19 +285,27 @@ const Dashboard = () => {
                   const isOverdue = dueDate < new Date();
                   const daysUntil = Math.ceil(
                     (dueDate.getTime() - new Date().getTime()) /
-                      (1000 * 60 * 60 * 24),
+                    (1000 * 60 * 60 * 24),
                   );
+
+                  const isTemporary = isTemporaryId(task.id);
 
                   return (
                     <div
                       key={task.id}
                       onClick={() => {
-                        navigate(`/tasks/${task.id}`);
+                        if (!isTemporary) {
+                          navigate(`/tasks/${task.id}`);
+                        }
                       }}
-                      className="bg-muted border border-border rounded-md p-2.5 md:p-3 hover:border-border/80 transition-smooth cursor-pointer shadow-sm"
+                      className={`bg-muted border border-border rounded-md p-2.5 md:p-3 transition-smooth shadow-sm ${isTemporary
+                          ? "opacity-60 cursor-not-allowed"
+                          : "hover:border-border/80 cursor-pointer"
+                        }`}
                       role="button"
-                      tabIndex={0}
+                      tabIndex={isTemporary ? -1 : 0}
                       aria-label={`Task: ${task.title}, ${isOverdue ? `overdue by ${Math.abs(daysUntil)} days` : `due in ${daysUntil} days`}`}
+                      aria-disabled={isTemporary}
                     >
                       <h3 className="text-foreground mb-1 md:mb-1.5 text-sm md:text-base truncate">
                         {task.title}

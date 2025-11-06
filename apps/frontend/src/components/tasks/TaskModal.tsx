@@ -20,7 +20,7 @@ import { SelectField } from "./TaskOptionSelect";
 import { useModal } from "@/contexts/ModalContext";
 
 export function TaskModal() {
-  const { isModalOpen, closeModal } = useModal();
+  const { isModalOpen, closeModal, modalState } = useModal();
   const { user: currentUser } = useAuth();
   const { data: projects = [] } = useAllProjects();
   const { allProjectUsers } = useUsers();
@@ -35,14 +35,16 @@ export function TaskModal() {
   const [dueDate, setDueDate] = useState("");
 
   useEffect(() => {
-    setTitle("");
-    setDescription("");
-    setStatus("TODO");
-    setPriority("MEDIUM");
-    setProjectId("");
-    setOwnerId(currentUser?.id || "");
-    setDueDate("");
-  }, [currentUser, open]);
+    if (modalState.task) {
+      setTitle("");
+      setDescription("");
+      setStatus("TODO");
+      setPriority("MEDIUM");
+      setProjectId("");
+      setOwnerId(currentUser?.id || "");
+      setDueDate("");
+    }
+  }, [currentUser, modalState.task]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,6 +79,13 @@ export function TaskModal() {
         onSuccess: () => {
           toast.success("Task created successfully");
           closeModal("task");
+          setTitle("");
+          setDescription("");
+          setStatus("TODO");
+          setPriority("MEDIUM");
+          setProjectId("");
+          setOwnerId(currentUser?.id || "");
+          setDueDate("");
         },
         onError: (error) => {
           toast.error(error.message || "Failed to create task");

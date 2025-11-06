@@ -22,15 +22,24 @@ export function ProjectModal() {
   const [description, setDescription] = useState("");
   const [memberIds, setMemberIds] = useState<string[]>([]);
 
-  const { isModalOpen, closeModal } = useModal();
+  const { isModalOpen, closeModal, modalState } = useModal();
 
   useEffect(() => {
-    setName("");
-    setDescription("");
-    setMemberIds(currentUser ? [currentUser.id] : []);
-  }, [currentUser]);
+    if (modalState.project) {
+      setName("");
+      setDescription("");
+      setMemberIds(currentUser ? [currentUser.id] : []);
+    }
+  }, [currentUser, modalState.project]);
 
-  const handleSubmit = () => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!name.trim()) {
+      toast.error("Please enter a project name");
+      return;
+    }
+
     const projectData = {
       name: name.trim(),
       description: description.trim(),
@@ -42,6 +51,9 @@ export function ProjectModal() {
       onSuccess: () => {
         toast.success("Project created successfully");
         closeModal("project");
+        setName("");
+        setDescription("");
+        setMemberIds(currentUser ? [currentUser.id] : []);
       },
       onError: (error: Error) => {
         toast.error(`Failed to create project: ${error.message}`);

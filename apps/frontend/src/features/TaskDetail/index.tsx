@@ -12,6 +12,7 @@ import { TaskComments } from "./TaskComments";
 import { TaskPropertiesCard } from "./TaskPropertiesCard";
 import { TaskMetadataCard } from "./TaskMetadataCard";
 import { TaskParticipantsCard } from "./TaskParticipantsCard";
+import { isTemporaryId } from "@/lib/utils";
 
 const TaskDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +41,11 @@ const TaskDetail = () => {
   useEffect(() => {
     if (!id) {
       navigate("/tasks");
+      return;
+    }
+    if (isTemporaryId(id)) {
+      navigate("/tasks");
+      return;
     }
   }, [id, navigate]);
 

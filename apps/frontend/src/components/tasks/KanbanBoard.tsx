@@ -5,6 +5,7 @@ import { useAllTasks, useTasksByProject } from "@/api/tasks/queries";
 import type { Task, TaskStatus } from "@/state";
 import { useNavigate, useParams } from "react-router-dom";
 import { KanbanColumn } from "./KanbanColumn";
+import { isTemporaryId } from "@/lib/utils";
 
 const columns: { status: TaskStatus; label: string; color: string }[] = [
   { status: "TODO", label: "Todo", color: "muted" },
@@ -22,7 +23,9 @@ export function KanbanBoard() {
   const navigate = useNavigate();
 
   const handleTaskClick = (task: Task) => {
-    navigate(`/tasks/${task.id}`);
+    if (!isTemporaryId(task.id)) {
+      navigate(`/tasks/${task.id}`);
+    }
   };
 
   const handleAddTask = (_status: TaskStatus) => {

@@ -1,6 +1,7 @@
 import { useDrag } from "react-dnd";
 import { TaskCard } from "./TaskCard";
 import type { Task } from "@/state";
+import { isTemporaryId } from "@/lib/utils";
 
 interface DraggableTaskCardProps {
   task: Task;
@@ -8,16 +9,22 @@ interface DraggableTaskCardProps {
 }
 
 export function DraggableTaskCard({ task, onClick }: DraggableTaskCardProps) {
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: "task",
-    item: { id: task.id, status: task.status },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
+  const isTemporary = isTemporaryId(task.id);
+
+  const [{ isDragging }, drag] = useDrag(
+    () => ({
+      type: "task",
+      item: { id: task.id, status: task.status },
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+      }),
+      canDrag: !isTemporary,
     }),
-  }));
+    [isTemporary, task.id, task.status],
+  );
 
   return (
-    <div ref={drag as any}>
+    <div ref={!isTemporary ? (drag as any) : undefined}>
       <TaskCard task={task} onClick={onClick} isDragging={isDragging} />
     </div>
   );

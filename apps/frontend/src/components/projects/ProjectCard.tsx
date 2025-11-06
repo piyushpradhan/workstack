@@ -2,6 +2,7 @@ import type { Project } from "@/api/projects/types";
 import { Users, CheckCircle2, Clock } from "lucide-react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
+import { isTemporaryId } from "@/lib/utils";
 
 interface ProjectCardProps {
   project: Project;
@@ -9,6 +10,13 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project }: ProjectCardProps) {
   const navigate = useNavigate();
+  const isTemporary = isTemporaryId(project.id);
+
+  const handleClick = () => {
+    if (!isTemporary) {
+      navigate(`/projects/${project.id}`);
+    }
+  };
 
   // TODO: Implement task hooks when task API is ready
   const tasks: any[] = []; // taskManager.getTasksByProjectId(project.id);
@@ -26,9 +34,12 @@ export function ProjectCard({ project }: ProjectCardProps) {
       layout
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ scale: 1.01 }}
-      onClick={() => navigate(`/projects/${project.id}`)}
-      className="bg-card border rounded-lg p-4 cursor-pointer hover:border-border transition-colors shadow-sm"
+      whileHover={!isTemporary ? { scale: 1.01 } : undefined}
+      onClick={handleClick}
+      className={`bg-card border rounded-lg p-4 transition-colors shadow-sm ${isTemporary
+          ? "opacity-60 cursor-not-allowed"
+          : "cursor-pointer hover:border-border"
+        }`}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
