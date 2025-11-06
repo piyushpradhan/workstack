@@ -2,7 +2,7 @@
 # See https://fly.io/docs/reference/configuration/ for more information
 
 app = "workstack"
-primary_region = "iad"  # Change to your preferred region (e.g., "ord", "sjc", "lhr")
+primary_region = "bom"
 
 [build]
   dockerfile = "apps/backend/Dockerfile"
