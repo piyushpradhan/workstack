@@ -7,3 +7,4 @@ export default fp(async (fastify) => {
     await fastify.register(cookie);
 });
 
+

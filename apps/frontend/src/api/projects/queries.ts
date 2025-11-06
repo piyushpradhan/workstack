@@ -44,15 +44,65 @@ export const useCreateProject = () => {
 
   return useMutation({
     mutationFn: createProject,
-    onSuccess: (newProject: Project) => {
-      // Invalidate and refetch project lists
-      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+    onMutate: async (newProjectData) => {
+      // Cancel all outgoing queries to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: projectKeys.lists() });
 
-      // Add the new project to the cache
-      queryClient.setQueryData(projectKeys.detail(newProject.id), newProject);
+      // Snapshot previous values for rollback
+      const previousProjects = queryClient.getQueryData<Project[]>(
+        projectKeys.lists(),
+      );
+
+      // Create optimistic project
+      const tempId = `temp-${Date.now()}`;
+      const optimisticProject: Project = {
+        id: tempId,
+        name: newProjectData.name,
+        description: newProjectData.description || "",
+        status: newProjectData.status,
+        startDate: newProjectData.startDate || "",
+        endDate: newProjectData.endDate || "",
+        owners: [], // Will be populated on success
+        members: [], // Will be populated from memberIds on success
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Optimistically update project list
+      queryClient.setQueryData<Project[]>(projectKeys.lists(), (old) => [
+        ...(old ?? []),
+        optimisticProject,
+      ]);
+
+      return {
+        previousProjects,
+        tempId,
+      };
     },
-    onError: (error: Error) => {
-      console.error("Error creating project:", error.message);
+    onError: (_error, _variables, context) => {
+      // Rollback on error
+      if (context?.previousProjects) {
+        queryClient.setQueryData(projectKeys.lists(), context.previousProjects);
+      }
+    },
+    onSuccess: (newProject: Project, _variables, context) => {
+      // Replace optimistic project with real one
+      queryClient.setQueryData(projectKeys.detail(newProject.id), newProject);
+
+      // Update list with the real project
+      queryClient.setQueryData<Project[]>(
+        projectKeys.lists(),
+        (old) =>
+          old?.map((project) =>
+            project.id === context?.tempId || project.id === newProject.id
+              ? newProject
+              : project,
+          ) ?? [],
+      );
+    },
+    onSettled: () => {
+      // Invalidate to ensure consistency
+      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
     },
   });
 };

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { KanbanBoard } from "@/components/tasks/KanbanBoard";
 import { ProjectModal } from "@/components/projects/ProjectModal";
@@ -17,6 +18,7 @@ import { useAuth } from "@/api/auth/queries";
 import { useTasksByProject } from "@/api/tasks/queries";
 import { useUsers } from "@/api/users/queries";
 import type { Task } from "@/state";
+import { isTemporaryId } from "@/lib/utils";
 
 const ProjectDetail = () => {
   const { id } = useParams();
@@ -25,6 +27,12 @@ const ProjectDetail = () => {
   const { data: projectTasks = [] } = useTasksByProject(id || "");
   const { allProjectUsers } = useUsers();
   const { user: currentUser } = useAuth();
+
+  useEffect(() => {
+    if (id && isTemporaryId(id)) {
+      navigate("/projects");
+    }
+  }, [id, navigate]);
 
   const project = projects.find((p) => p.id === id);
 
