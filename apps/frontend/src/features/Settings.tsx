@@ -15,6 +15,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useAppState } from "@/state/app/state";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth, useUpdateCurrentUser } from "@/api/auth/queries";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const languages = [
   { value: "en", label: "English" },
@@ -24,6 +25,7 @@ const languages = [
 ];
 
 export default function Settings() {
+  useDocumentTitle("Settings");
   const { settings, updateSettings, resetSettings } = useAppState();
   const { setTheme } = useTheme();
   const { user } = useAuth();
@@ -81,9 +83,9 @@ export default function Settings() {
     <ErrorBoundary>
       <div className="p-4 md:p-6 space-y-6 max-w-3xl">
         <div>
-          <h1 className="text-foreground text-xl md:text-2xl">Settings</h1>
-          <p className="text-muted-foreground text-sm">
-            Manage your profile, notifications, and app preferences
+          <h1 className="text-foreground text-xl md:text-2xl font-semibold">Settings</h1>
+          <p className="text-muted-foreground text-sm md:text-base">
+            Manage your profile, preferences, and notification settings
           </p>
         </div>
 
@@ -99,7 +101,7 @@ export default function Settings() {
                   onChange={(e) =>
                     handleChange("profileDisplayName", e.target.value)
                   }
-                  placeholder="Your name"
+                  placeholder="Enter your display name"
                 />
               </div>
 
@@ -110,7 +112,7 @@ export default function Settings() {
                   type="email"
                   value={form.email}
                   onChange={(e) => handleChange("email", e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder="Enter your email address"
                 />
               </div>
             </div>

@@ -19,6 +19,7 @@ import { useTasksByProject } from "@/api/tasks/queries";
 import { useUsers } from "@/api/users/queries";
 import type { Task } from "@/state";
 import { isTemporaryId } from "@/lib/utils";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const ProjectDetail = () => {
   const { id } = useParams();
@@ -36,13 +37,15 @@ const ProjectDetail = () => {
 
   const project = projects.find((p) => p.id === id);
 
+  useDocumentTitle(project?.name || "Project");
+
   if (!project) {
     return (
       <div className="p-6">
         <div className="text-center py-12">
-          <h2 className="text-white mb-2">Project not found</h2>
+          <h2 className="text-foreground mb-2 font-semibold text-xl">Project not found</h2>
           <p className="text-muted-foreground mb-4">
-            The project you're looking for doesn't exist.
+            The project you're looking for doesn't exist or may have been deleted.
           </p>
           <Button onClick={() => navigate("/projects")} className="gap-2">
             <ArrowLeft className="w-4 h-4" />
@@ -114,12 +117,14 @@ const ProjectDetail = () => {
             <span className="text-sm md:text-base">Back to Projects</span>
           </Button>
 
-          <h1 className="text-white mb-2 text-xl md:text-2xl break-words">
+          <h1 className="text-foreground mb-2 text-xl md:text-2xl break-words font-semibold">
             {project.name}
           </h1>
-          <p className="text-muted-foreground mb-3 md:mb-4 text-sm md:text-base">
-            {project.description}
-          </p>
+          {project.description && (
+            <p className="text-muted-foreground mb-3 md:mb-4 text-sm md:text-base">
+              {project.description}
+            </p>
+          )}
 
           <div className="flex flex-wrap items-center gap-3 md:gap-4">
             <div className="flex items-center gap-2">

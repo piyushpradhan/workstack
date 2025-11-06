@@ -81,7 +81,7 @@ export function CommandPalette() {
     <CommandDialog open={isOpen} onOpenChange={setIsOpen}>
       <CommandInput placeholder="Type a command or search..." />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandEmpty>No results found. Try a different search term.</CommandEmpty>
 
         <CommandGroup heading="Quick Actions">
           <CommandItem onSelect={() => openModal("task")}>

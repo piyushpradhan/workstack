@@ -7,8 +7,10 @@ import { useAllProjects } from "@/api/projects/queries";
 import type { TaskPriority, TaskStatus } from "@/state";
 import { TasksHeader } from "./TasksHeader";
 import { TasksFilters } from "./TasksFilters";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function Tasks() {
+  useDocumentTitle("Tasks");
   const { data: tasks } = useAllTasks();
   const { data: projects } = useAllProjects();
   const { allProjectUsers: users } = useUsers();
