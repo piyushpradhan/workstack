@@ -18,8 +18,10 @@ import type { Project } from "@/api/projects/types";
 import { useModal } from "@/contexts/ModalContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useErrorHandler } from "@/components/ErrorBoundary";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const Projects = () => {
+  useDocumentTitle("Projects");
   const { user: currentUser } = useAuth();
   const { data: projects = [], isLoading, error, refetch } = useAllProjects();
   const [searchQuery, setSearchQuery] = useState("");
@@ -96,10 +98,11 @@ const Projects = () => {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-foreground mb-2 text-2xl">Projects</h1>
+            <h1 className="text-foreground mb-2 text-2xl font-semibold">Projects</h1>
             <p className="text-muted-foreground text-base">
-              {filteredProjects.length} project
-              {filteredProjects.length !== 1 ? "s" : ""}
+              {filteredProjects.length === 0
+                ? "No projects yet"
+                : `${filteredProjects.length} ${filteredProjects.length === 1 ? "project" : "projects"}`}
             </p>
           </div>
         </div>
@@ -126,11 +129,10 @@ const Projects = () => {
             >
               <button
                 onClick={() => setFilter("all")}
-                className={`px-3 py-1.5 rounded transition-colors text-sm ${
-                  filter === "all"
+                className={`px-3 py-1.5 rounded transition-colors text-sm ${filter === "all"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
                 role="tab"
                 aria-selected={filter === "all"}
                 aria-controls="projects-content"
@@ -140,11 +142,10 @@ const Projects = () => {
               </button>
               <button
                 onClick={() => setFilter("owned")}
-                className={`px-3 py-1.5 rounded transition-colors text-sm ${
-                  filter === "owned"
+                className={`px-3 py-1.5 rounded transition-colors text-sm ${filter === "owned"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
                 role="tab"
                 aria-selected={filter === "owned"}
                 aria-controls="projects-content"
@@ -161,11 +162,10 @@ const Projects = () => {
             >
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 rounded transition-colors ${
-                  viewMode === "grid"
+                className={`p-2 rounded transition-colors ${viewMode === "grid"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
                 aria-label="Grid view"
                 aria-pressed={viewMode === "grid"}
               >
@@ -173,11 +173,10 @@ const Projects = () => {
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded transition-colors ${
-                  viewMode === "list"
+                className={`p-2 rounded transition-colors ${viewMode === "list"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
                 aria-label="List view"
                 aria-pressed={viewMode === "list"}
               >
@@ -212,11 +211,11 @@ const Projects = () => {
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-foreground mb-2">No projects found</h3>
+            <h3 className="text-foreground mb-2 font-semibold">No projects found</h3>
             <p className="text-muted-foreground mb-4">
               {searchQuery
-                ? "Try adjusting your search"
-                : "Get started by creating your first project"}
+                ? "Try adjusting your search terms or filters"
+                : "Get started by creating your first project to organize your work"}
             </p>
             {!searchQuery && (
               <Button

@@ -110,7 +110,7 @@ export function TaskModal() {
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Task title"
+              placeholder="e.g., Implement user authentication, Fix login bug"
               autoFocus
             />
           </div>
@@ -121,7 +121,7 @@ export function TaskModal() {
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add a description..."
+              placeholder="Describe what needs to be done, acceptance criteria, and any relevant details..."
               rows={4}
             />
           </div>
@@ -132,7 +132,7 @@ export function TaskModal() {
               value={projectId}
               onValueChange={setProjectId}
               options={projects.map((p) => ({ value: p.id, label: p.name }))}
-              placeholder="Select project"
+              placeholder="Choose a project"
             />
             <SelectField
               label="Assignee"
@@ -142,7 +142,7 @@ export function TaskModal() {
                 value: user.id,
                 label: user.name,
               }))}
-              placeholder="Unassigned"
+              placeholder="Assign to team member"
             />
           </div>
 

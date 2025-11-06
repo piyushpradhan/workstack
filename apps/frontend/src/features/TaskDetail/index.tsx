@@ -13,6 +13,7 @@ import { TaskPropertiesCard } from "./TaskPropertiesCard";
 import { TaskMetadataCard } from "./TaskMetadataCard";
 import { TaskParticipantsCard } from "./TaskParticipantsCard";
 import { isTemporaryId } from "@/lib/utils";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const TaskDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +38,8 @@ const TaskDetail = () => {
     [allProjectUsers, task],
   );
   const currentUser = allProjectUsers[0] ?? null;
+
+  useDocumentTitle(task?.title || "Task");
 
   useEffect(() => {
     if (!id) {

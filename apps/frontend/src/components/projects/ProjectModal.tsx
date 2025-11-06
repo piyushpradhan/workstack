@@ -80,7 +80,7 @@ export function ProjectModal() {
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter project name"
+              placeholder="e.g., Website Redesign, Mobile App Development"
               className="mt-1"
               autoFocus
             />
@@ -92,7 +92,7 @@ export function ProjectModal() {
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add a description..."
+              placeholder="Describe the project goals, timeline, and key deliverables..."
               rows={4}
               className="mt-1"
             />

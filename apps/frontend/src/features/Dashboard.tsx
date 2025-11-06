@@ -18,8 +18,10 @@ import { ProjectModal } from "@/components/projects/ProjectModal";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { isTemporaryId } from "@/lib/utils";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const Dashboard = () => {
+  useDocumentTitle("Dashboard");
   const navigate = useNavigate();
   const {
     user: currentUser,
@@ -177,11 +179,11 @@ const Dashboard = () => {
     <ErrorBoundary>
       <div className="p-4 md:p-6 space-y-4 md:space-y-6 w-full h-full">
         <div>
-          <h1 className="text-foreground mb-2 text-xl md:text-2xl">
+          <h1 className="text-foreground mb-2 text-xl md:text-2xl font-semibold">
             Welcome back, {currentUser!.name}!
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Here's what's happening with your projects and tasks
+            Here's an overview of your projects and tasks
           </p>
         </div>
 
@@ -299,8 +301,8 @@ const Dashboard = () => {
                         }
                       }}
                       className={`bg-muted border border-border rounded-md p-2.5 md:p-3 transition-smooth shadow-sm ${isTemporary
-                          ? "opacity-60 cursor-not-allowed"
-                          : "hover:border-border/80 cursor-pointer"
+                        ? "opacity-60 cursor-not-allowed"
+                        : "hover:border-border/80 cursor-pointer"
                         }`}
                       role="button"
                       tabIndex={isTemporary ? -1 : 0}

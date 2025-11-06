@@ -12,8 +12,10 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/api/auth/queries";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useErrorHandler } from "@/components/ErrorBoundary";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const Login = () => {
+  useDocumentTitle("Sign In");
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -89,11 +91,11 @@ const Login = () => {
               <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center shadow-lg">
                 <CheckSquare className="w-7 h-7 text-primary-foreground" />
               </div>
-              <span className="text-foreground text-2xl">Workstack</span>
+              <span className="text-foreground text-2xl font-semibold">WorkStack</span>
             </div>
-            <h1 className="mb-2 text-foreground">Welcome back</h1>
+            <h1 className="mb-2 text-foreground text-2xl font-semibold">Welcome back</h1>
             <p className="text-muted-foreground">
-              {"Sign in to continue to Workstack"}
+              Sign in to your account to continue managing your projects and tasks
             </p>
           </div>
 
@@ -205,18 +207,18 @@ const Login = () => {
 
             <div className="text-center">
               <p className="text-muted-foreground text-sm">
-                If you don't have an account, use these demo credentials:
+                New to WorkStack? Use these demo credentials to get started:
               </p>
-              <div className="mt-2 inline-block text-left text-xs text-muted-foreground px-2 py-1 border rounded-sm">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium w-16">email:</span>{" "}
-                  <code className="bg-transparent text-muted-foreground">
+              <div className="mt-2 inline-block text-left text-xs text-muted-foreground px-3 py-2 border border-border rounded-md bg-muted/50">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-medium w-20">Email:</span>
+                  <code className="bg-transparent text-foreground font-mono">
                     demo@workstack.app
                   </code>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium w-16">password:</span>{" "}
-                  <code className="bg-transparent text-muted-foreground">
+                  <span className="font-medium w-20">Password:</span>
+                  <code className="bg-transparent text-foreground font-mono">
                     demo@123
                   </code>
                 </div>
