@@ -3,11 +3,8 @@ import type { User } from "@/api/auth/types";
 export interface CreateProjectRequest {
   name: string;
   description?: string;
-  status: string;
   startDate?: string;
   endDate?: string;
-  ownerIds?: Array<string>;
-  memberIds?: Array<string>;
 }
 
 export interface UpdateProjectRequest {

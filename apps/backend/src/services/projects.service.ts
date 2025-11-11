@@ -1,49 +1,52 @@
 import { type PrismaClient } from "@prisma/client";
+import { CacheService } from "../utils/cache.js";
 
 class ProjectsService {
-  constructor(private project: PrismaClient["project"]) { }
+  constructor(private project: PrismaClient["project"], private cache: CacheService) { }
 
   getAllUsersProjects = async ({ userId }: { userId: string }) => {
     try {
-      const projects = await this.project.findMany({
-        where: {
-          OR: [
-            {
-              owners: {
-                some: {
-                  userId: userId
+      return await this.cache.getOrSet(`projects:${userId}`, async () => {
+        const projects = await this.project.findMany({
+          where: {
+            OR: [
+              {
+                owners: {
+                  some: {
+                    userId: userId
+                  }
                 }
+              },
+              {
+                members: {
+                  some: {
+                    userId: userId
+                  }
+                }
+              }
+            ]
+          },
+          include: {
+            owners: {
+              include: {
+                user: true
               }
             },
-            {
-              members: {
-                some: {
-                  userId: userId
-                }
+            members: {
+              include: {
+                user: true
               }
             }
-          ]
-        },
-        include: {
-          owners: {
-            include: {
-              user: true
-            }
-          },
-          members: {
-            include: {
-              user: true
-            }
           }
-        }
-      });
+        });
 
-      // Transform the data to flatten owners and members
-      return projects.map(project => ({
-        ...project,
-        owners: project.owners.map(owner => owner.user),
-        members: project.members.map(member => member.user)
-      }));
+        // Transform the data to flatten owners and members
+        return projects.map(project => ({
+          ...project,
+          owners: project.owners.map(owner => owner.user),
+          members: project.members.map(member => member.user)
+        }));
+      }, { ttl: 3600, namespace: "projects" });
     } catch (error) {
       throw error;
     }
@@ -51,28 +54,30 @@ class ProjectsService {
 
   getAllOwnedProjects = async ({ userId }: { userId: string }) => {
     try {
-      const projects = await this.project.findMany({
-        where: {
-          owners: {
-            some: {
-              userId: userId
+      return await this.cache.getOrSet(`projects:owned:${userId}`, async () => {
+        const projects = await this.project.findMany({
+          where: {
+            owners: {
+              some: {
+                userId: userId
+              }
+            }
+          },
+          include: {
+            owners: {
+              include: {
+                user: true
+              }
             }
           }
-        },
-        include: {
-          owners: {
-            include: {
-              user: true
-            }
-          }
-        }
-      });
+        });
 
-      // Transform the data to flatten owners
-      return projects.map(project => ({
-        ...project,
-        owners: project.owners.map(owner => owner.user)
-      }));
+        // Transform the data to flatten owners
+        return projects.map(project => ({
+          ...project,
+          owners: project.owners.map(owner => owner.user)
+        }));
+      }, { ttl: 3600, namespace: "projects" });
     } catch (error) {
       throw error;
     }
@@ -80,7 +85,7 @@ class ProjectsService {
 
   createProject = async ({ name, description, ownerId }: { name: string; description?: string; ownerId: string }) => {
     try {
-      return await this.project.create({
+      const createdProject = await this.project.create({
         data: {
           name,
           description,
@@ -91,6 +96,13 @@ class ProjectsService {
           }
         }
       });
+
+      await this.cache.invalidateCache([
+        `projects:${ownerId}`,
+        `projects:owned:${ownerId}`,
+      ], { namespace: 'projects' });
+
+      return createdProject;
     } catch (error) {
       throw error;
     }
@@ -98,50 +110,52 @@ class ProjectsService {
 
   getProjectById = async ({ projectId, userId }: { projectId: string; userId: string }) => {
     try {
-      const project = await this.project.findFirst({
-        where: {
-          id: projectId,
-          OR: [
-            {
-              owners: {
-                some: {
-                  userId: userId
+      return await this.cache.getOrSet(`project:${projectId}`, async () => {
+        const project = await this.project.findFirst({
+          where: {
+            id: projectId,
+            OR: [
+              {
+                owners: {
+                  some: {
+                    userId: userId
+                  }
                 }
+              },
+              {
+                members: {
+                  some: {
+                    userId: userId
+                  }
+                }
+              }
+            ]
+          },
+          include: {
+            owners: {
+              include: {
+                user: true
               }
             },
-            {
-              members: {
-                some: {
-                  userId: userId
-                }
+            members: {
+              include: {
+                user: true
               }
             }
-          ]
-        },
-        include: {
-          owners: {
-            include: {
-              user: true
-            }
-          },
-          members: {
-            include: {
-              user: true
-            }
           }
+        });
+
+        if (!project) {
+          return null;
         }
-      });
 
-      if (!project) {
-        return null;
-      }
-
-      // Transform the data to flatten owners and members
-      return {
-        ...project,
-        owners: project.owners.map(owner => owner.user),
-        members: project.members.map(member => member.user)
-      };
+        // Transform the data to flatten owners and members
+        return {
+          ...project,
+          owners: project.owners.map(owner => owner.user),
+          members: project.members.map(member => member.user)
+        };
+      }, { ttl: 3600, namespace: 'projects' });
     } catch (error) {
       throw error;
     }
@@ -158,6 +172,10 @@ class ProjectsService {
               userId: userId
             }
           }
+        },
+        include: {
+          owners: true,
+          members: true
         }
       });
 
@@ -165,12 +183,61 @@ class ProjectsService {
         return null;
       }
 
-      return await this.project.update({
+      await this.project.update({
         where: {
           id: projectId
         },
         data: updateData
       });
+
+      // Fetch full project data with relations for proper caching
+      const fullProject = await this.project.findFirst({
+        where: { id: projectId },
+        include: {
+          owners: {
+            include: {
+              user: true
+            }
+          },
+          members: {
+            include: {
+              user: true
+            }
+          }
+        }
+      });
+
+      if (!fullProject) {
+        return null;
+      }
+
+      // Transform the data to flatten owners and members
+      const transformedProject = {
+        ...fullProject,
+        owners: fullProject.owners.map(owner => owner.user),
+        members: fullProject.members.map(member => member.user)
+      };
+
+      // Invalidate all the related cache keys
+      const ownerIds = fullProject.owners.map(owner => owner.userId);
+      const memberIds = fullProject.members.map(member => member.userId);
+      const allUserIds = [...new Set([...ownerIds, ...memberIds])];
+
+      const keysToInvalidate = [
+        `project:${projectId}`
+      ];
+
+      // Invalidate caches for all owners and members
+      allUserIds.forEach(userId => {
+        keysToInvalidate.push(`projects:${userId}`, `projects:owned:${userId}`);
+      });
+
+      await this.cache.invalidateCache(keysToInvalidate, { namespace: 'projects' });
+
+      // Cache the properly transformed project
+      await this.cache.setCached(`project:${projectId}`, transformedProject, { ttl: 3600, namespace: 'projects' });
+
+      return transformedProject;
     } catch (error) {
       throw error;
     }
@@ -178,7 +245,7 @@ class ProjectsService {
 
   deleteProject = async ({ projectId, userId }: { projectId: string; userId: string }) => {
     try {
-      // First check if user is an owner of the project
+      // Get project info before deletion for cache invalidation
       const project = await this.project.findFirst({
         where: {
           id: projectId,
@@ -187,6 +254,10 @@ class ProjectsService {
               userId: userId
             }
           }
+        },
+        include: {
+          owners: true,
+          members: true
         }
       });
 
@@ -199,6 +270,22 @@ class ProjectsService {
           id: projectId
         }
       });
+
+      // Invalidate all related caches
+      const ownerIds = project.owners.map(owner => owner.userId);
+      const memberIds = project.members.map(member => member.userId);
+      const allUserIds = [...new Set([...ownerIds, ...memberIds])];
+
+      const keysToInvalidate = [
+        `project:${projectId}`
+      ];
+
+      // Invalidate caches for all owners and members
+      allUserIds.forEach(userId => {
+        keysToInvalidate.push(`projects:${userId}`, `projects:owned:${userId}`);
+      });
+
+      await this.cache.invalidateCache(keysToInvalidate, { namespace: 'projects' });
 
       return true;
     } catch (error) {

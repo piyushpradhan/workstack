@@ -27,7 +27,7 @@ export default fp(async (fastify) => {
     session: new SessionService(fastify.prisma.session),
     token: new TokenService(fastify.jwt),
     user: new UserService(fastify.prisma.user),
-    projects: new ProjectsService(fastify.prisma.project),
+    projects: new ProjectsService(fastify.prisma.project, cacheService),
     tasks: new TasksService(fastify.prisma.task, cacheService),
   });
 });

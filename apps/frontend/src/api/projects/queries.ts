@@ -59,7 +59,7 @@ export const useCreateProject = () => {
         id: tempId,
         name: newProjectData.name,
         description: newProjectData.description || "",
-        status: newProjectData.status,
+        status: "PLANNING",
         startDate: newProjectData.startDate || "",
         endDate: newProjectData.endDate || "",
         owners: [], // Will be populated on success

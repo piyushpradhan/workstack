@@ -20,7 +20,6 @@ export function ProjectModal() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [memberIds, setMemberIds] = useState<string[]>([]);
 
   const { isModalOpen, closeModal, modalState } = useModal();
 
@@ -28,7 +27,6 @@ export function ProjectModal() {
     if (modalState.project) {
       setName("");
       setDescription("");
-      setMemberIds(currentUser ? [currentUser.id] : []);
     }
   }, [currentUser, modalState.project]);
 
@@ -43,8 +41,6 @@ export function ProjectModal() {
     const projectData = {
       name: name.trim(),
       description: description.trim(),
-      status: "PLANNING",
-      memberIds: memberIds.length > 0 ? memberIds : [currentUser?.id || "1"],
     };
 
     createProject(projectData, {
@@ -53,7 +49,6 @@ export function ProjectModal() {
         closeModal("project");
         setName("");
         setDescription("");
-        setMemberIds(currentUser ? [currentUser.id] : []);
       },
       onError: (error: Error) => {
         toast.error(`Failed to create project: ${error.message}`);

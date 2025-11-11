@@ -27,7 +27,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const completionRate =
     totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  const members = project.members;
+  const members = project.members || [];
 
   return (
     <motion.div
@@ -37,8 +37,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
       whileHover={!isTemporary ? { scale: 1.01 } : undefined}
       onClick={handleClick}
       className={`bg-card border rounded-lg p-4 transition-colors shadow-sm ${isTemporary
-          ? "opacity-60 cursor-not-allowed"
-          : "cursor-pointer hover:border-border"
+        ? "opacity-60 cursor-not-allowed"
+        : "cursor-pointer hover:border-border"
         }`}
     >
       <div className="flex items-start justify-between mb-3">
