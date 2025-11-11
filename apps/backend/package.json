@@ -15,6 +15,7 @@
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx --env-file=.env ./src/database/seeds/index.ts",
+    "db:seed:large": "tsx --env-file=.env ./src/database/seeds/large-seed.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset"
   },
