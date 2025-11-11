@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { stateKeys } from "@/state";
 import type { UpdateTaskRequest, Task } from "@/api/tasks/types";
 import {
@@ -33,10 +33,14 @@ export const taskKeys = {
   search: stateKeys.tasks.search,
 } as const;
 
-export const useAllTasks = () => {
-  return useQuery({
-    queryKey: taskKeys.lists(),
-    queryFn: getAllTasks,
+export const useAllTasks = (limit: number = 50) => {
+  return useInfiniteQuery({
+    queryKey: [...taskKeys.lists(), limit],
+    queryFn: ({ pageParam }) => getAllTasks(limit, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => {
+      return lastPage.meta.hasNextPage ? lastPage.cursor : undefined;
+    },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -52,20 +56,28 @@ export const useTask = (id: string) => {
   });
 };
 
-export const useTasksByProject = (projectId: string) => {
-  return useQuery({
-    queryKey: taskKeys.byProject(projectId),
-    queryFn: () => getTasksByProject(projectId),
+export const useTasksByProject = (projectId: string, limit: number = 10) => {
+  return useInfiniteQuery({
+    queryKey: [...taskKeys.byProject(projectId), limit],
+    queryFn: ({ pageParam }) => getTasksByProject(projectId, limit, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => {
+      return lastPage.meta.hasNextPage ? lastPage.cursor : undefined;
+    },
     enabled: !!projectId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 };
 
-export const useOwnedTasks = () => {
-  return useQuery({
-    queryKey: taskKeys.myTasks(),
-    queryFn: getOwnedTasks,
+export const useOwnedTasks = (limit: number = 10) => {
+  return useInfiniteQuery({
+    queryKey: [...taskKeys.myTasks(), limit],
+    queryFn: ({ pageParam }) => getOwnedTasks(limit, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => {
+      return lastPage.meta.hasNextPage ? lastPage.cursor : undefined;
+    },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -84,102 +96,13 @@ export const useCreateTask = () => {
       });
       await queryClient.cancelQueries({ queryKey: taskKeys.myTasks() });
 
-      // Snapshot previous values for rollback
-      const previousAllTasks = queryClient.getQueryData<Task[]>(
-        taskKeys.lists(),
-      );
-      const previousProjectTasks = queryClient.getQueryData<Task[]>(
-        taskKeys.byProject(newTaskData.projectId),
-      );
-      const previousMyTasks = queryClient.getQueryData<Task[]>(
-        taskKeys.myTasks(),
-      );
-
-      // Create optimistic task
-      const tempId = `temp-${Date.now()}`;
-      const optimisticTask: Task = {
-        id: tempId,
-        ...newTaskData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      // Optimistically update all task lists
-      queryClient.setQueryData<Task[]>(taskKeys.lists(), (old) => [
-        ...(old ?? []),
-        optimisticTask,
-      ]);
-      queryClient.setQueryData<Task[]>(
-        taskKeys.byProject(newTaskData.projectId),
-        (old) => [...(old ?? []), optimisticTask],
-      );
-
-      // Update myTasks if the task is assigned to current user
-      if (newTaskData.ownerId) {
-        queryClient.setQueryData<Task[]>(taskKeys.myTasks(), (old) =>
-          old ? [...old, optimisticTask] : [optimisticTask],
-        );
-      }
-
       return {
-        previousAllTasks,
-        previousProjectTasks,
-        previousMyTasks,
         projectId: newTaskData.projectId,
-        tempId,
       };
     },
-    onError: (_error, _variables, context) => {
-      // Rollback on error
-      if (context?.previousAllTasks) {
-        queryClient.setQueryData(taskKeys.lists(), context.previousAllTasks);
-      }
-      if (context?.previousProjectTasks && context.projectId) {
-        queryClient.setQueryData(
-          taskKeys.byProject(context.projectId),
-          context.previousProjectTasks,
-        );
-      }
-      if (context?.previousMyTasks) {
-        queryClient.setQueryData(taskKeys.myTasks(), context.previousMyTasks);
-      }
-    },
-    onSuccess: (newTask: Task, _variables, context) => {
-      // Replace optimistic task with real one
+    onSuccess: (newTask: Task) => {
+      // Cache the new task detail
       queryClient.setQueryData(taskKeys.detail(newTask.id), newTask);
-
-      // Update all lists with the real task
-      queryClient.setQueryData<Task[]>(
-        taskKeys.lists(),
-        (old) =>
-          old?.map((task) =>
-            task.id === context?.tempId || task.id === newTask.id
-              ? newTask
-              : task,
-          ) ?? [],
-      );
-
-      queryClient.setQueryData<Task[]>(
-        taskKeys.byProject(newTask.projectId),
-        (old) =>
-          old?.map((task) =>
-            task.id === context?.tempId || task.id === newTask.id
-              ? newTask
-              : task,
-          ) ?? [],
-      );
-
-      if (newTask.ownerId) {
-        queryClient.setQueryData<Task[]>(
-          taskKeys.myTasks(),
-          (old) =>
-            old?.map((task) =>
-              task.id === context?.tempId || task.id === newTask.id
-                ? newTask
-                : task,
-            ) ?? [],
-        );
-      }
     },
     onSettled: () => {
       // Invalidate to ensure consistency
@@ -328,76 +251,7 @@ export const useDeleteTask = () => {
       await queryClient.cancelQueries({ queryKey: taskKeys.lists() });
       await queryClient.cancelQueries({ queryKey: taskKeys.myTasks() });
 
-      const currentTask = queryClient.getQueryData<Task>(
-        taskKeys.detail(deletedTaskId),
-      );
-      if (!currentTask) return null;
-
-      const projectId = currentTask.projectId;
-      await queryClient.cancelQueries({
-        queryKey: taskKeys.byProject(projectId),
-      });
-
-      // Snapshot previous values for rollback
-      const previousAllTasks = queryClient.getQueryData<Task[]>(
-        taskKeys.lists(),
-      );
-      const previousProjectTasks = queryClient.getQueryData<Task[]>(
-        taskKeys.byProject(projectId),
-      );
-      const previousMyTasks = queryClient.getQueryData<Task[]>(
-        taskKeys.myTasks(),
-      );
-      const deletedTask = currentTask;
-
-      // Optimistically remove task from all lists
-      queryClient.setQueryData<Task[]>(
-        taskKeys.lists(),
-        (old) => old?.filter((task) => task.id !== deletedTaskId) ?? [],
-      );
-      queryClient.setQueryData<Task[]>(
-        taskKeys.byProject(projectId),
-        (old) => old?.filter((task) => task.id !== deletedTaskId) ?? [],
-      );
-
-      // Remove from myTasks if applicable
-      if (currentTask.ownerId) {
-        queryClient.setQueryData<Task[]>(
-          taskKeys.myTasks(),
-          (old) => old?.filter((task) => task.id !== deletedTaskId) ?? [],
-        );
-      }
-
-      return {
-        previousAllTasks,
-        previousProjectTasks,
-        previousMyTasks,
-        projectId,
-        deletedTask,
-      };
-    },
-    onError: (_error, deletedTaskId, context) => {
-      // Rollback on error
-      if (context?.previousAllTasks) {
-        queryClient.setQueryData(taskKeys.lists(), context.previousAllTasks);
-      }
-      if (
-        context?.previousProjectTasks &&
-        context.projectId &&
-        context.deletedTask
-      ) {
-        queryClient.setQueryData(
-          taskKeys.byProject(context.projectId),
-          context.previousProjectTasks,
-        );
-        queryClient.setQueryData(
-          taskKeys.detail(deletedTaskId),
-          context.deletedTask,
-        );
-      }
-      if (context?.previousMyTasks) {
-        queryClient.setQueryData(taskKeys.myTasks(), context.previousMyTasks);
-      }
+      return null;
     },
     onSuccess: (_data, deletedTaskId) => {
       // Remove the detail query
@@ -418,10 +272,13 @@ export const useTasks = () => {
   const updateMutation = useUpdateTask();
   const deleteMutation = useDeleteTask();
 
+  const allTasks = allTasksQuery.data?.pages.flatMap(page => page.data) ?? [];
+  const ownedTasks = ownedTasksQuery.data?.pages.flatMap(page => page.data) ?? [];
+
   return {
-    allTasks: allTasksQuery.data ?? [],
-    ownedTasks: ownedTasksQuery.data ?? [],
-    myTasks: ownedTasksQuery.data ?? [],
+    allTasks,
+    ownedTasks,
+    myTasks: ownedTasks,
 
     isLoadingAll: allTasksQuery.isLoading,
     isLoadingOwned: ownedTasksQuery.isLoading,
@@ -431,6 +288,12 @@ export const useTasks = () => {
     allTasksError: allTasksQuery.error,
     ownedTasksError: ownedTasksQuery.error,
     myTasksError: ownedTasksQuery.error,
+
+    // Pagination
+    allTasksHasNextPage: allTasksQuery.hasNextPage,
+    allTasksFetchNextPage: allTasksQuery.fetchNextPage,
+    ownedTasksHasNextPage: ownedTasksQuery.hasNextPage,
+    ownedTasksFetchNextPage: ownedTasksQuery.fetchNextPage,
 
     createTask: createMutation.mutate,
     updateTask: updateMutation.mutate,
@@ -459,8 +322,8 @@ export const useTaskStats = () => {
   const allTasksQuery = useAllTasks();
   const ownedTasksQuery = useOwnedTasks();
 
-  const allTasks = allTasksQuery.data ?? [];
-  const ownedTasks = ownedTasksQuery.data ?? [];
+  const allTasks = allTasksQuery.data?.pages.flatMap(page => page.data) ?? [];
+  const ownedTasks = ownedTasksQuery.data?.pages.flatMap(page => page.data) ?? [];
 
   return {
     total: allTasks.length,

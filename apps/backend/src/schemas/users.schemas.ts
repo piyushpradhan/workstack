@@ -1,6 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import { Static } from '@sinclair/typebox';
-import { BaseSchemas, ResponseSchemas, createSuccessResponse, createArrayResponse } from './base.js';
+import { BaseSchemas, ResponseSchemas, createSuccessResponse, createArrayResponse, createCursorPaginatedResponse } from './base.js';
 
 // Base user schemas
 const User = Type.Object({
@@ -213,8 +213,12 @@ export const UserRouteSchemas = {
         params: Type.Object({
             projectIds: Type.String({ description: "Comma separated list of project IDs" }),
         }),
+        querystring: Type.Object({
+            limit: Type.Optional(Type.Number({ minimum: 1, maximum: 100, default: 10, description: "Number of items per page" })),
+            cursor: Type.Optional(Type.String({ description: "Cursor for pagination" })),
+        }),
         response: {
-            200: createArrayResponse(UserResponseSchemas.User, "Users retrieved successfully"),
+            200: createCursorPaginatedResponse(UserResponseSchemas.User, "Users retrieved successfully"),
             401: BaseSchemas.Error,
             403: BaseSchemas.Error,
             500: BaseSchemas.Error,

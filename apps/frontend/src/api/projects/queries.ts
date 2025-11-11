@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { stateKeys } from "@/state";
 import type { UpdateProjectRequest, Project } from "@/api/projects/types";
 import {
@@ -20,10 +20,14 @@ export const projectKeys = {
   byUser: stateKeys.projects.byUser,
 } as const;
 
-export const useAllProjects = () => {
-  return useQuery({
-    queryKey: projectKeys.lists(),
-    queryFn: getAllProjects,
+export const useAllProjects = (limit: number = 21) => {
+  return useInfiniteQuery({
+    queryKey: [...projectKeys.lists(), limit],
+    queryFn: ({ pageParam }) => getAllProjects(limit, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => {
+      return lastPage.meta.hasNextPage ? lastPage.cursor : undefined;
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
@@ -44,61 +48,15 @@ export const useCreateProject = () => {
 
   return useMutation({
     mutationFn: createProject,
-    onMutate: async (newProjectData) => {
+    onMutate: async () => {
       // Cancel all outgoing queries to prevent race conditions
       await queryClient.cancelQueries({ queryKey: projectKeys.lists() });
 
-      // Snapshot previous values for rollback
-      const previousProjects = queryClient.getQueryData<Project[]>(
-        projectKeys.lists(),
-      );
-
-      // Create optimistic project
-      const tempId = `temp-${Date.now()}`;
-      const optimisticProject: Project = {
-        id: tempId,
-        name: newProjectData.name,
-        description: newProjectData.description || "",
-        status: "PLANNING",
-        startDate: newProjectData.startDate || "",
-        endDate: newProjectData.endDate || "",
-        owners: [], // Will be populated on success
-        members: [], // Will be populated from memberIds on success
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      // Optimistically update project list
-      queryClient.setQueryData<Project[]>(projectKeys.lists(), (old) => [
-        ...(old ?? []),
-        optimisticProject,
-      ]);
-
-      return {
-        previousProjects,
-        tempId,
-      };
+      return {};
     },
-    onError: (_error, _variables, context) => {
-      // Rollback on error
-      if (context?.previousProjects) {
-        queryClient.setQueryData(projectKeys.lists(), context.previousProjects);
-      }
-    },
-    onSuccess: (newProject: Project, _variables, context) => {
-      // Replace optimistic project with real one
+    onSuccess: (newProject: Project) => {
+      // Cache the new project detail
       queryClient.setQueryData(projectKeys.detail(newProject.id), newProject);
-
-      // Update list with the real project
-      queryClient.setQueryData<Project[]>(
-        projectKeys.lists(),
-        (old) =>
-          old?.map((project) =>
-            project.id === context?.tempId || project.id === newProject.id
-              ? newProject
-              : project,
-          ) ?? [],
-      );
     },
     onSettled: () => {
       // Invalidate to ensure consistency
@@ -155,10 +113,12 @@ export const useProjects = () => {
   const updateMutation = useUpdateProject();
   const deleteMutation = useDeleteProject();
 
+  const allProjects = allProjectsQuery.data?.pages.flatMap(page => page.data) ?? [];
+
   return {
     // Query data
-    allProjects: allProjectsQuery.data ?? [],
-    userProjects: allProjectsQuery.data ?? [], // Same as allProjects
+    allProjects,
+    userProjects: allProjects, // Same as allProjects
 
     // Loading states
     isLoadingAll: allProjectsQuery.isLoading,
@@ -168,6 +128,10 @@ export const useProjects = () => {
     // Error states
     allProjectsError: allProjectsQuery.error,
     userProjectsError: allProjectsQuery.error, // Same as allProjectsError
+
+    // Pagination
+    hasNextPage: allProjectsQuery.hasNextPage,
+    fetchNextPage: allProjectsQuery.fetchNextPage,
 
     // Mutation functions
     createProject: createMutation.mutate,

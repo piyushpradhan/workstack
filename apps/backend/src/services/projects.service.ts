@@ -4,49 +4,64 @@ import { CacheService } from "../utils/cache.js";
 class ProjectsService {
   constructor(private project: PrismaClient["project"], private cache: CacheService) { }
 
-  getAllUsersProjects = async ({ userId }: { userId: string }) => {
+  getAllUsersProjects = async ({ userId, limit, cursor }: { userId: string; limit: number; cursor?: string }) => {
     try {
-      return await this.cache.getOrSet(`projects:${userId}`, async () => {
-        const projects = await this.project.findMany({
-          where: {
-            OR: [
-              {
-                owners: {
-                  some: {
-                    userId: userId
-                  }
+      // Don't cache paginated results - each cursor represents a different page
+      const projects = await this.project.findMany({
+        take: limit + 1, // Fetch one extra to determine if there's a next page
+        skip: cursor ? 1 : 0,
+        cursor: cursor ? { id: cursor } : undefined,
+        where: {
+          OR: [
+            {
+              owners: {
+                some: {
+                  userId: userId
                 }
-              },
-              {
-                members: {
-                  some: {
-                    userId: userId
-                  }
-                }
-              }
-            ]
-          },
-          include: {
-            owners: {
-              include: {
-                user: true
               }
             },
-            members: {
-              include: {
-                user: true
+            {
+              members: {
+                some: {
+                  userId: userId
+                }
               }
             }
+          ]
+        },
+        orderBy: {
+          id: 'desc'
+        },
+        include: {
+          owners: {
+            include: {
+              user: true
+            }
+          },
+          members: {
+            include: {
+              user: true
+            }
           }
-        });
+        }
+      });
 
-        // Transform the data to flatten owners and members
-        return projects.map(project => ({
-          ...project,
-          owners: project.owners.map(owner => owner.user),
-          members: project.members.map(member => member.user)
-        }));
-      }, { ttl: 3600, namespace: "projects" });
+      // Check if there's a next page
+      const hasNextPage = projects.length > limit;
+      const projectsToReturn = hasNextPage ? projects.slice(0, limit) : projects;
+
+      // Transform the data to flatten owners and members
+      const transformedProjects = projectsToReturn.map(project => ({
+        ...project,
+        owners: project.owners.map(owner => owner.user),
+        members: project.members.map(member => member.user)
+      }));
+
+      return {
+        projects: transformedProjects,
+        cursor: transformedProjects.length > 0 ? transformedProjects[transformedProjects.length - 1].id : undefined,
+        hasNextPage
+      }
     } catch (error) {
       throw error;
     }

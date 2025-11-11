@@ -4,10 +4,22 @@ import type {
   CreateProjectRequest,
   UpdateProjectRequest,
 } from "@/api/projects/types";
+import type { CursorPaginatedResponse } from "@/api/types";
 
-// Get all projects (with optional filters)
-export const getAllProjects = async (): Promise<Array<Project>> => {
-  return await apiClient.get<Array<Project>>("/projects");
+export const getAllProjects = async (
+  limit?: number,
+  cursor?: string
+): Promise<CursorPaginatedResponse<Project>> => {
+  const params = new URLSearchParams();
+
+  if (limit) params.append("limit", limit.toString());
+  if (cursor) params.append("cursor", cursor);
+
+  const queryString = params.toString();
+
+  return await apiClient.getCursorPaginated<Project>(
+    `/projects${queryString ? `?${queryString}` : ""}`
+  );
 };
 
 // Get projects owned by the current user

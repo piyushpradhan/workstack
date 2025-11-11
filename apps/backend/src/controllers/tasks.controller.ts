@@ -10,9 +10,17 @@ class TasksController {
     list: RouteHandler = async (request, reply) => {
         try {
             const userId = request.user.sub;
-            const tasks = await this.tasksService.getAllUsersTasks({ userId });
+            const { limit, cursor } = request.query as { limit?: number; cursor?: string };
+            const defaultLimit = 10;
+            const actualLimit = limit && limit > 0 ? Math.min(limit, 100) : defaultLimit; // Cap at 100
 
-            return ResponseHelper.success(reply, tasks, "Tasks retrieved successfully");
+            const { tasks, cursor: nextCursor, hasNextPage } = await this.tasksService.getAllUsersTasks({
+                userId,
+                limit: actualLimit,
+                cursor
+            });
+
+            return ResponseHelper.cursorPaginated(reply, tasks, nextCursor, hasNextPage, "Tasks retrieved successfully");
         } catch (error) {
             request.log.error(error, "Error fetching user tasks");
             return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch tasks");
@@ -22,9 +30,17 @@ class TasksController {
     listOwned: RouteHandler = async (request, reply) => {
         try {
             const userId = request.user.sub;
-            const tasks = await this.tasksService.getAllOwnedTasks({ userId });
+            const { limit, cursor } = request.query as { limit?: number; cursor?: string };
+            const defaultLimit = 10;
+            const actualLimit = limit && limit > 0 ? Math.min(limit, 100) : defaultLimit; // Cap at 100
 
-            return ResponseHelper.success(reply, tasks, "Owned tasks retrieved successfully");
+            const { tasks, cursor: nextCursor, hasNextPage } = await this.tasksService.getAllOwnedTasks({
+                userId,
+                limit: actualLimit,
+                cursor
+            });
+
+            return ResponseHelper.cursorPaginated(reply, tasks, nextCursor, hasNextPage, "Owned tasks retrieved successfully");
         } catch (error) {
             request.log.error(error, "Error fetching owned tasks");
             return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch owned tasks");
@@ -35,10 +51,18 @@ class TasksController {
         try {
             const userId = request.user.sub;
             const { projectId } = request.params as { projectId: string };
+            const { limit, cursor } = request.query as { limit?: number; cursor?: string };
+            const defaultLimit = 10;
+            const actualLimit = limit && limit > 0 ? Math.min(limit, 100) : defaultLimit; // Cap at 100
 
-            const tasks = await this.tasksService.getTasksByProject({ projectId, userId });
+            const { tasks, cursor: nextCursor, hasNextPage } = await this.tasksService.getTasksByProject({
+                projectId,
+                userId,
+                limit: actualLimit,
+                cursor
+            });
 
-            return ResponseHelper.success(reply, tasks, "Project tasks retrieved successfully");
+            return ResponseHelper.cursorPaginated(reply, tasks, nextCursor, hasNextPage, "Project tasks retrieved successfully");
         } catch (error) {
             request.log.error(error, "Error fetching project tasks");
             return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch project tasks");

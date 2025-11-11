@@ -5,7 +5,7 @@ import axios, {
 } from "axios";
 import { BASE_URL } from "@/api";
 import { AuthError } from "./auth/errorHandler";
-import type { ApiResponse } from "./types";
+import type { ApiResponse, CursorPaginatedResponse } from "./types";
 
 class ApiClient {
   private axiosInstance: AxiosInstance;
@@ -194,6 +194,65 @@ class ApiClient {
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.axiosInstance.delete<ApiResponse<T> | T>(url, config);
     return this.extractData<T>(response);
+  }
+
+  /**
+   * Get cursor paginated response with full metadata
+   * Returns the full response structure including cursor and meta fields
+   */
+  async getCursorPaginated<T>(url: string, config?: AxiosRequestConfig): Promise<CursorPaginatedResponse<T>> {
+    const response = await this.axiosInstance.get<ApiResponse<T[]> | CursorPaginatedResponse<T> | T[]>(url, config);
+
+    if (response.status === 204) {
+      return {
+        success: true,
+        data: [],
+        meta: { hasNextPage: false, hasPreviousPage: false }
+      };
+    }
+
+    const data = response.data;
+
+    // Handle empty responses
+    if (!data) {
+      return {
+        success: true,
+        data: [],
+        meta: { hasNextPage: false, hasPreviousPage: false }
+      };
+    }
+
+    // Check if response follows the standardized cursor paginated format
+    if (typeof data === "object" && "success" in data && "meta" in data) {
+      const apiResponse = data as CursorPaginatedResponse<T>;
+
+      // Ensure meta object has required fields
+      if (!apiResponse.meta) {
+        apiResponse.meta = { hasNextPage: false, hasPreviousPage: false };
+      }
+
+      // Ensure data is an array
+      if (!Array.isArray(apiResponse.data)) {
+        apiResponse.data = [];
+      }
+
+      return apiResponse;
+    }
+
+    // Fallback: if it's an array (old format), wrap it
+    if (Array.isArray(data)) {
+      return {
+        success: true,
+        data: data as T[],
+        meta: { hasNextPage: false, hasPreviousPage: false }
+      };
+    }
+
+    return {
+      success: true,
+      data: [],
+      meta: { hasNextPage: false, hasPreviousPage: false }
+    };
   }
 }
 

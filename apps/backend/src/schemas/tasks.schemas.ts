@@ -142,7 +142,7 @@ const createSuccessResponseSchema = (dataSchema: any, description?: string) => (
     description: description
 });
 
-const createArrayResponseSchema = (itemSchema: any, description?: string) => ({
+const createCursorPaginatedResponseSchema = (itemSchema: any, description?: string) => ({
     type: "object",
     properties: {
         success: { type: "boolean", const: true },
@@ -150,9 +150,18 @@ const createArrayResponseSchema = (itemSchema: any, description?: string) => ({
             type: "array",
             items: itemSchema
         },
-        message: { type: "string" }
+        message: { type: "string" },
+        cursor: { type: "string", nullable: true, description: "Cursor for next page" },
+        meta: {
+            type: "object",
+            properties: {
+                hasNextPage: { type: "boolean" },
+                hasPreviousPage: { type: "boolean" }
+            },
+            required: ["hasNextPage", "hasPreviousPage"]
+        }
     },
-    required: ["success", "data"],
+    required: ["success", "data", "meta"],
     description: description
 });
 
@@ -162,8 +171,15 @@ export const listTasksSchema = {
     tags: ["Tasks"],
     summary: "List User Tasks",
     security: [{ bearerAuth: [] }],
+    querystring: {
+        type: "object",
+        properties: {
+            limit: { type: "number", minimum: 1, maximum: 100, default: 10, description: "Number of items per page" },
+            cursor: { type: "string", description: "Cursor for pagination" }
+        }
+    },
     response: {
-        200: createArrayResponseSchema(taskWithRelationsSchema, "Tasks retrieved successfully"),
+        200: createCursorPaginatedResponseSchema(taskWithRelationsSchema, "Tasks retrieved successfully"),
         401: errorSchema
     }
 };
@@ -173,8 +189,15 @@ export const listOwnedTasksSchema = {
     tags: ["Tasks"],
     summary: "List Owned Tasks",
     security: [{ bearerAuth: [] }],
+    querystring: {
+        type: "object",
+        properties: {
+            limit: { type: "number", minimum: 1, maximum: 100, default: 10, description: "Number of items per page" },
+            cursor: { type: "string", description: "Cursor for pagination" }
+        }
+    },
     response: {
-        200: createArrayResponseSchema(taskWithOwnersSchema, "Owned tasks retrieved successfully"),
+        200: createCursorPaginatedResponseSchema(taskWithOwnersSchema, "Owned tasks retrieved successfully"),
         401: errorSchema
     }
 };
@@ -184,8 +207,15 @@ export const listTasksByProjectSchema = {
     tags: ["Tasks"],
     summary: "List Project Tasks",
     security: [{ bearerAuth: [] }],
+    querystring: {
+        type: "object",
+        properties: {
+            limit: { type: "number", minimum: 1, maximum: 100, default: 10, description: "Number of items per page" },
+            cursor: { type: "string", description: "Cursor for pagination" }
+        }
+    },
     response: {
-        200: createArrayResponseSchema(taskWithRelationsSchema, "Project tasks retrieved successfully"),
+        200: createCursorPaginatedResponseSchema(taskWithRelationsSchema, "Project tasks retrieved successfully"),
         401: errorSchema,
         404: errorSchema
     }

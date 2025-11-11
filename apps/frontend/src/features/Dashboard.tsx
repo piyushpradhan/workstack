@@ -28,12 +28,11 @@ const Dashboard = () => {
     isLoading: authLoading,
     error: authError,
   } = useAuth();
-  const {
-    data: projects = [],
-    isLoading: projectsLoading,
-    error: projectsError,
-    refetch: refetchProjects,
-  } = useAllProjects();
+  const projectsQuery = useAllProjects();
+  const projects = projectsQuery.data?.pages.flatMap(page => page.data) ?? [];
+  const projectsLoading = projectsQuery.isLoading;
+  const projectsError = projectsQuery.error;
+  const refetchProjects = projectsQuery.refetch;
   const {
     ownedTasks,
     isLoading: tasksLoading,

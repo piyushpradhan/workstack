@@ -22,7 +22,8 @@ const TaskDetail = () => {
   const { data: task, isLoading, error } = useTask(id ?? "");
   const updateTaskMutation = useUpdateTask();
 
-  const { data: projects = [] } = useAllProjects();
+  const projectsQuery = useAllProjects();
+  const projects = projectsQuery.data?.pages.flatMap(page => page.data) ?? [];
   const { allProjectUsers } = useUsers();
 
   const project = useMemo(

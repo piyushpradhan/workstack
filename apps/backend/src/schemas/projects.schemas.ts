@@ -1,6 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import { Static } from '@sinclair/typebox';
-import { BaseSchemas, ResponseSchemas, createSuccessResponse, createArrayResponse } from './base.js';
+import { BaseSchemas, ResponseSchemas, createSuccessResponse, createArrayResponse, createCursorPaginatedResponse } from './base.js';
 
 // Base entity schemas
 const ProjectUser = Type.Object({
@@ -168,8 +168,12 @@ export const ProjectRouteSchemas = {
         tags: ['Projects'],
         summary: 'List User Projects',
         security: [{ bearerAuth: [] }],
+        querystring: Type.Object({
+            limit: Type.Number({ minimum: 1, default: 10 }),
+            cursor: Type.Optional(Type.String({ description: 'Cursor for pagination' })),
+        }),
         response: {
-            200: createArrayResponse(ProjectSchemas.ProjectWithRelations, 'Projects retrieved successfully'),
+            200: createCursorPaginatedResponse(ProjectSchemas.ProjectWithRelations, 'Projects retrieved successfully'),
             401: BaseSchemas.Error,
         },
     },

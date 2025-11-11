@@ -1,15 +1,21 @@
 import apiClient from "@/api/axios";
 import type { User } from "@/api/users/types";
+import type { CursorPaginatedResponse } from "@/api/types";
 
-// The backend now returns { success: true, data: User[] }
-// We extract the data array and wrap it in the expected format for backward compatibility
+// Get users by project IDs with cursor pagination
 export const getAllProjectUsers = async (
   projectIds: string[],
-): Promise<{ users: User[] }> => {
-  const users = await apiClient.get<User[]>(
-    `/users/projects/${projectIds.join(",")}`,
-  );
+  limit?: number,
+  cursor?: string
+): Promise<CursorPaginatedResponse<User>> => {
+  const params = new URLSearchParams();
 
-  // Return in the format expected by the frontend
-  return { users };
+  if (limit) params.append("limit", limit.toString());
+  if (cursor) params.append("cursor", cursor);
+
+  const queryString = params.toString();
+
+  return await apiClient.getCursorPaginated<User>(
+    `/users/projects/${projectIds.join(",")}${queryString ? `?${queryString}` : ""}`
+  );
 };

@@ -24,8 +24,10 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: projects = [] } = useAllProjects();
-  const { data: projectTasks = [] } = useTasksByProject(id || "");
+  const projectsQuery = useAllProjects();
+  const projects = projectsQuery.data?.pages.flatMap(page => page.data) ?? [];
+  const projectTasksQuery = useTasksByProject(id || "");
+  const projectTasks = projectTasksQuery.data?.pages.flatMap(page => page.data) ?? [];
   const { allProjectUsers } = useUsers();
   const { user: currentUser } = useAuth();
 

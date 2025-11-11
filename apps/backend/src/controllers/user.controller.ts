@@ -51,8 +51,17 @@ class UserController {
     getUsersByProjects: RouteHandler = async (request, reply) => {
         try {
             const projectIds = (request.params as { projectIds: string }).projectIds.split(",");
-            const users = await this.userService.getUsersByProjectIds({ projectIds });
-            return ResponseHelper.success(reply, users, "Users retrieved successfully");
+            const { limit, cursor } = request.query as { limit?: number; cursor?: string };
+            const defaultLimit = 10;
+            const actualLimit = limit && limit > 0 ? Math.min(limit, 100) : defaultLimit; // Cap at 100
+
+            const { users, cursor: nextCursor, hasNextPage } = await this.userService.getUsersByProjectIds({
+                projectIds,
+                limit: actualLimit,
+                cursor
+            });
+
+            return ResponseHelper.cursorPaginated(reply, users, nextCursor, hasNextPage, "Users retrieved successfully");
         } catch (error) {
             request.log.error(error, "Error fetching users by projects");
             return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch users");

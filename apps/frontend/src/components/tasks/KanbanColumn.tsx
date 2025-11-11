@@ -1,4 +1,3 @@
-import { Plus } from "lucide-react";
 import { useDrop } from "react-dnd";
 import { useUpdateTask } from "@/api/tasks/queries";
 import type { Task, TaskStatus } from "@/state";
@@ -10,7 +9,9 @@ interface KanbanColumnProps {
   color: string;
   tasks: Task[];
   onTaskClick: (task: Task) => void;
-  onAddTask: (status: TaskStatus) => void;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  fetchNextPage?: () => void;
 }
 
 export function KanbanColumn({
@@ -19,7 +20,9 @@ export function KanbanColumn({
   color,
   tasks,
   onTaskClick,
-  onAddTask,
+  hasNextPage,
+  isFetchingNextPage,
+  fetchNextPage,
 }: KanbanColumnProps) {
   const updateTaskMutation = useUpdateTask();
 
@@ -35,10 +38,23 @@ export function KanbanColumn({
     }),
   }));
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (
+      scrollTop + clientHeight >= scrollHeight - 100 &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      fetchNextPage
+    ) {
+      fetchNextPage();
+    }
+  };
+
   return (
     <div
       ref={drop as any}
-      className={`flex flex-col bg-background rounded-lg border shadow-sm ${isOver ? "border-blue ring-2 ring-blue/20" : "border-border"} transition-smooth md:h-full h-[calc(100vh-16rem)]`}
+      className={`h-full overflow-y-auto flex flex-col bg-background rounded-lg border shadow-sm ${isOver ? "border-blue ring-2 ring-blue/20" : "border-border"} transition-smooth md:h-full h-[calc(100vh-16rem)]`}
+      onScroll={handleScroll}
     >
       <div className="p-3 md:p-4 border-b border-border">
         <div className="flex items-center justify-between">
@@ -56,7 +72,7 @@ export function KanbanColumn({
         </div>
       </div>
 
-      <div className="flex-1 p-3 md:p-4 space-y-3 overflow-y-auto">
+      <div className="flex-1 p-3 md:p-4 space-y-3">
         {tasks.map((task) => (
           <DraggableTaskCard
             key={task.id}
@@ -68,16 +84,6 @@ export function KanbanColumn({
         {tasks.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">No tasks</div>
         )}
-      </div>
-
-      <div className="p-3 md:p-4 border-t border-border">
-        <button
-          onClick={() => onAddTask(status)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-smooth"
-        >
-          <Plus className="w-4 h-4" />
-          <span className="text-xs md:text-sm">Add task</span>
-        </button>
       </div>
     </div>
   );

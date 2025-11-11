@@ -17,9 +17,12 @@ const columns: { status: TaskStatus; label: string; color: string }[] = [
 
 export function KanbanBoard() {
   const { id: projectId } = useParams();
-  const { data: tasksByProject = [] } = useTasksByProject(projectId ?? "");
-  const { data: allTasks = [] } = useAllTasks();
+  const tasksByProjectQuery = useTasksByProject(projectId ?? "");
+  const tasksByProject = tasksByProjectQuery.data?.pages.flatMap(page => page.data) ?? [];
+  const allTasksQuery = useAllTasks();
+  const allTasks = allTasksQuery.data?.pages.flatMap(page => page.data) ?? [];
   const tasks = projectId ? tasksByProject : allTasks;
+  const tasksQuery = projectId ? tasksByProjectQuery : allTasksQuery;
   const navigate = useNavigate();
 
   const handleTaskClick = (task: Task) => {
@@ -28,52 +31,54 @@ export function KanbanBoard() {
     }
   };
 
-  const handleAddTask = (_status: TaskStatus) => {
-    // Add task handler - can be implemented later
-  };
-
   return (
     <DndProvider backend={HTML5Backend}>
       {/* Desktop: Grid layout */}
-      <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-4 h-full overflow-y-auto">
-        {columns.map((column) => {
-          const columnTasks = tasks.filter(
-            (task: Task) => task.status === column.status,
-          );
-          return (
-            <KanbanColumn
-              key={column.status}
-              {...column}
-              tasks={columnTasks}
-              onTaskClick={handleTaskClick}
-              onAddTask={handleAddTask}
-            />
-          );
-        })}
-      </div>
-
-      {/* Mobile: Horizontal scroll */}
-      <div className="md:hidden overflow-x-auto -mx-4 px-4 h-full">
-        <div className="flex gap-3 pb-4" style={{ minWidth: "min-content" }}>
+      <div className="flex-1 overflow-y-hidden">
+        <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-4 h-full">
           {columns.map((column) => {
             const columnTasks = tasks.filter(
               (task: Task) => task.status === column.status,
             );
             return (
-              <div key={column.status} className="w-72 flex-shrink-0">
-                <KanbanColumn
-                  {...column}
-                  tasks={columnTasks}
-                  onTaskClick={handleTaskClick}
-                  onAddTask={handleAddTask}
-                />
-              </div>
+              <KanbanColumn
+                key={column.status}
+                {...column}
+                tasks={columnTasks}
+                onTaskClick={handleTaskClick}
+                hasNextPage={tasksQuery.hasNextPage}
+                isFetchingNextPage={tasksQuery.isFetchingNextPage}
+                fetchNextPage={tasksQuery.fetchNextPage}
+              />
             );
           })}
         </div>
-      </div>
 
-      <TaskModal />
+        {/* Mobile: Horizontal scroll */}
+        <div className="md:hidden overflow-x-auto -mx-4 px-4 h-full">
+          <div className="flex gap-3 pb-4" style={{ minWidth: "min-content" }}>
+            {columns.map((column) => {
+              const columnTasks = tasks.filter(
+                (task: Task) => task.status === column.status,
+              );
+              return (
+                <div key={column.status} className="w-72 flex-shrink-0">
+                  <KanbanColumn
+                    {...column}
+                    tasks={columnTasks}
+                    onTaskClick={handleTaskClick}
+                    hasNextPage={tasksQuery.hasNextPage}
+                    isFetchingNextPage={tasksQuery.isFetchingNextPage}
+                    fetchNextPage={tasksQuery.fetchNextPage}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <TaskModal />
+      </div>
     </DndProvider>
   );
 }

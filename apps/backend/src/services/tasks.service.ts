@@ -4,134 +4,168 @@ import { CacheService } from "../utils/cache.js";
 class TasksService {
   constructor(private task: PrismaClient["task"], private cache: CacheService) { }
 
-  getAllUsersTasks = async ({ userId }: { userId: string }) => {
+  getAllUsersTasks = async ({ userId, limit, cursor }: { userId: string; limit: number; cursor?: string }) => {
     try {
-      return await this.cache.getOrSet(`tasks:${userId}`, async () => {
-        const tasks = await this.task.findMany({
-          where: {
-            OR: [
-              {
-                owners: {
-                  some: {
-                    userId: userId
-                  }
-                }
-              },
-              {
-                members: {
-                  some: {
-                    userId: userId
-                  }
+      // Don't cache paginated results
+      const tasks = await this.task.findMany({
+        take: limit + 1,
+        skip: cursor ? 1 : 0,
+        cursor: cursor ? { id: cursor } : undefined,
+        where: {
+          OR: [
+            {
+              owners: {
+                some: {
+                  userId: userId
                 }
               }
-            ]
-          },
-          include: {
-            project: {
-              select: {
-                id: true,
-                name: true,
-                description: true
-              }
             },
-            owners: {
-              include: {
-                user: true
-              }
-            },
-            members: {
-              include: {
-                user: true
+            {
+              members: {
+                some: {
+                  userId: userId
+                }
               }
             }
+          ]
+        },
+        orderBy: {
+          id: 'desc'
+        },
+        include: {
+          project: {
+            select: {
+              id: true,
+              name: true,
+              description: true
+            }
+          },
+          owners: {
+            include: {
+              user: true
+            }
+          },
+          members: {
+            include: {
+              user: true
+            }
           }
-        });
+        }
+      });
 
-        // Transform the data to flatten owners and members
-        const transformedTasks = tasks.map(task => ({
-          ...task,
-          owners: task.owners.map(owner => owner.user),
-          members: task.members.map(member => member.user)
-        }));
+      // Check if there's a next page
+      const hasNextPage = tasks.length > limit;
+      const tasksToReturn = hasNextPage ? tasks.slice(0, limit) : tasks;
 
-        return transformedTasks;
-      }, { ttl: 3600, namespace: "tasks" });
+      const transformedTasks = tasksToReturn.map(task => ({
+        ...task,
+        owners: task.owners.map(owner => owner.user),
+        members: task.members.map(member => member.user)
+      }));
+
+      return {
+        tasks: transformedTasks,
+        cursor: transformedTasks.length > 0 ? transformedTasks[transformedTasks.length - 1].id : undefined,
+        hasNextPage
+      };
     } catch (error) {
       throw error;
     }
   };
 
-  getAllOwnedTasks = async ({ userId }: { userId: string }) => {
+  getAllOwnedTasks = async ({ userId, limit, cursor }: { userId: string; limit: number; cursor?: string }) => {
     try {
-      return await this.cache.getOrSet(`tasks:owned:${userId}`, async () => {
-        const tasks = await this.task.findMany({
-          where: {
-            owners: {
-              some: {
-                userId: userId
-              }
-            }
-          },
-          include: {
-            project: {
-              select: {
-                id: true,
-                name: true,
-                description: true
-              }
-            },
-            owners: {
-              include: {
-                user: true
-              }
+      const tasks = await this.task.findMany({
+        take: limit + 1,
+        skip: cursor ? 1 : 0,
+        cursor: cursor ? { id: cursor } : undefined,
+        where: {
+          owners: {
+            some: {
+              userId: userId
             }
           }
-        });
+        },
+        orderBy: {
+          id: 'desc'
+        },
+        include: {
+          project: {
+            select: {
+              id: true,
+              name: true,
+              description: true
+            }
+          },
+          owners: {
+            include: {
+              user: true
+            }
+          }
+        }
+      });
 
-        // Transform the data to flatten owners
-        const transformedTasks = tasks.map(task => ({
-          ...task,
-          owners: task.owners.map(owner => owner.user)
-        }));
+      // Check if there's a next page
+      const hasNextPage = tasks.length > limit;
+      const tasksToReturn = hasNextPage ? tasks.slice(0, limit) : tasks;
 
-        return transformedTasks;
-      }, { ttl: 3600, namespace: "tasks" });
+      const transformedTasks = tasksToReturn.map(task => ({
+        ...task,
+        owners: task.owners.map(owner => owner.user)
+      }));
+
+      return {
+        tasks: transformedTasks,
+        cursor: transformedTasks.length > 0 ? transformedTasks[transformedTasks.length - 1].id : undefined,
+        hasNextPage
+      };
     } catch (error) {
       throw error;
     }
   };
 
-  getTasksByProject = async ({ projectId, userId }: { projectId: string; userId: string }) => {
+  getTasksByProject = async ({ projectId, userId, limit, cursor }: { projectId: string; userId: string; limit: number; cursor?: string }) => {
     try {
-      return await this.cache.getOrSet(`tasks:project:${projectId}`, async () => {
-        const tasks = await this.task.findMany({
-          where: {
-            projectId,
+      const tasks = await this.task.findMany({
+        take: limit + 1,
+        skip: cursor ? 1 : 0,
+        cursor: cursor ? { id: cursor } : undefined,
+        where: {
+          projectId,
+        },
+        orderBy: {
+          id: 'desc'
+        },
+        include: {
+          project: true,
+          owners: {
+            include: {
+              user: true
+            }
           },
-          include: {
-            project: true,
-            owners: {
-              include: {
-                user: true
-              }
-            },
-            members: {
-              include: {
-                user: true
-              }
+          members: {
+            include: {
+              user: true
             }
           }
-        });
+        }
+      });
 
-        // Transform the data to flatten owners and members
-        const transformedTasks = tasks.map(task => ({
-          ...task,
-          owners: task.owners.map(owner => owner.user),
-          members: task.members.map(member => member.user)
-        }));
+      // Check if there's a next page
+      const hasNextPage = tasks.length > limit;
+      const tasksToReturn = hasNextPage ? tasks.slice(0, limit) : tasks;
 
-        return transformedTasks;
-      }, { ttl: 3600, namespace: "tasks" })
+      const transformedTasks = tasksToReturn.map(task => ({
+        ...task,
+        owners: task.owners.map(owner => owner.user),
+        members: task.members.map(member => member.user)
+      }));
+
+      return {
+        tasks: transformedTasks,
+        cursor: transformedTasks.length > 0 ? transformedTasks[transformedTasks.length - 1].id : undefined,
+        hasNextPage
+      };
     } catch (error) {
       throw error;
     }

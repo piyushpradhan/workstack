@@ -11,9 +11,17 @@ class ProjectsController {
   list: RouteHandler = async (request, reply) => {
     try {
       const userId = request.user.sub;
-      const projects = await this.projectsService.getAllUsersProjects({ userId });
+      const { limit, cursor } = request.query as { limit?: number; cursor?: string };
+      const defaultLimit = 10;
+      const actualLimit = limit && limit > 0 ? Math.min(limit, 100) : defaultLimit; // Cap at 100
 
-      return ResponseHelper.success(reply, projects, "Projects retrieved successfully");
+      const { projects, cursor: nextCursor, hasNextPage } = await this.projectsService.getAllUsersProjects({
+        userId,
+        limit: actualLimit,
+        cursor
+      });
+
+      return ResponseHelper.cursorPaginated(reply, projects, nextCursor, hasNextPage, "Projects retrieved successfully");
     } catch (error) {
       request.log.error(error, "Error fetching user projects");
       return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch projects");

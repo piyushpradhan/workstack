@@ -25,7 +25,8 @@ import { isTemporaryId } from "@/lib/utils";
 export function CommandPalette() {
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { data: projects = [] } = useAllProjects();
+  const projectsQuery = useAllProjects();
+  const projects = projectsQuery.data?.pages.flatMap(page => page.data) ?? [];
   const [isOpen, setIsOpen] = useState(false);
 
   const { openModal } = useModal();

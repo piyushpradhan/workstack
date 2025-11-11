@@ -23,7 +23,11 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 const Projects = () => {
   useDocumentTitle("Projects");
   const { user: currentUser } = useAuth();
-  const { data: projects = [], isLoading, error, refetch } = useAllProjects();
+  const projectsQuery = useAllProjects();
+  const projects = projectsQuery.data?.pages.flatMap(page => page.data) ?? [];
+  const isLoading = projectsQuery.isLoading;
+  const error = projectsQuery.error;
+  const refetch = projectsQuery.refetch;
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filter, setFilter] = useState<"all" | "owned">("all");
@@ -50,6 +54,17 @@ const Projects = () => {
       }
     });
   }, [projects, searchQuery, filter, currentUser?.id, handleError]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (
+      scrollTop + clientHeight >= scrollHeight - 100 &&
+      projectsQuery.hasNextPage &&
+      !projectsQuery.isFetchingNextPage
+    ) {
+      projectsQuery.fetchNextPage();
+    }
+  };
 
   if (isLoading) {
     return (
@@ -95,7 +110,7 @@ const Projects = () => {
 
   return (
     <ErrorBoundary>
-      <div className="p-6 space-y-6">
+      <div className="flex flex-col p-6 space-y-6 h-full">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-foreground mb-2 text-2xl font-semibold">Projects</h1>
@@ -130,8 +145,8 @@ const Projects = () => {
               <button
                 onClick={() => setFilter("all")}
                 className={`px-3 py-1.5 rounded transition-colors text-sm ${filter === "all"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
                   }`}
                 role="tab"
                 aria-selected={filter === "all"}
@@ -143,8 +158,8 @@ const Projects = () => {
               <button
                 onClick={() => setFilter("owned")}
                 className={`px-3 py-1.5 rounded transition-colors text-sm ${filter === "owned"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
                   }`}
                 role="tab"
                 aria-selected={filter === "owned"}
@@ -163,8 +178,8 @@ const Projects = () => {
               <button
                 onClick={() => setViewMode("grid")}
                 className={`p-2 rounded transition-colors ${viewMode === "grid"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
                   }`}
                 aria-label="Grid view"
                 aria-pressed={viewMode === "grid"}
@@ -174,8 +189,8 @@ const Projects = () => {
               <button
                 onClick={() => setViewMode("list")}
                 className={`p-2 rounded transition-colors ${viewMode === "list"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
                   }`}
                 aria-label="List view"
                 aria-pressed={viewMode === "list"}
@@ -187,21 +202,23 @@ const Projects = () => {
         </div>
 
         {filteredProjects.length > 0 ? (
-          <motion.div
-            layout
-            id="projects-content"
-            role="region"
-            aria-label={`${filteredProjects.length} projects in ${viewMode} view`}
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-                : "space-y-4"
-            }
-          >
-            {filteredProjects.map((project: Project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </motion.div>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden w-full" onScroll={handleScroll}>
+            <motion.div
+              layout
+              id="projects-content"
+              role="region"
+              aria-label={`${filteredProjects.length} projects in ${viewMode} view`}
+              className={
+                viewMode === "grid"
+                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 h-full"
+                  : "space-y-4"
+              }
+            >
+              {filteredProjects.map((project: Project) => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+            </motion.div>
+          </div>
         ) : (
           <div
             className="text-center py-12"

@@ -22,7 +22,8 @@ import { useModal } from "@/contexts/ModalContext";
 export function TaskModal() {
   const { isModalOpen, closeModal, modalState } = useModal();
   const { user: currentUser } = useAuth();
-  const { data: projects = [] } = useAllProjects();
+  const projectsQuery = useAllProjects();
+  const projects = projectsQuery.data?.pages.flatMap(page => page.data) ?? [];
   const { allProjectUsers } = useUsers();
   const createTaskMutation = useCreateTask();
 

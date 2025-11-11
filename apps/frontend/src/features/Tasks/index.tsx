@@ -1,19 +1,22 @@
 import { useState } from "react";
-import { KanbanBoard } from "../../components/tasks/KanbanBoard";
-import { TaskModal } from "../../components/tasks/TaskModal";
+import { KanbanBoard } from "@/components/tasks/KanbanBoard";
+import { TaskModal } from "@/components/tasks/TaskModal";
 import { useUsers } from "@/api/users/queries";
 import { useAllTasks } from "@/api/tasks/queries";
 import { useAllProjects } from "@/api/projects/queries";
 import type { TaskPriority, TaskStatus } from "@/state";
-import { TasksHeader } from "./TasksHeader";
-import { TasksFilters } from "./TasksFilters";
+import { TasksHeader } from "@/features/Tasks/TasksHeader";
+import { TasksFilters } from "@/features/Tasks/TasksFilters";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function Tasks() {
   useDocumentTitle("Tasks");
-  const { data: tasks } = useAllTasks();
-  const { data: projects } = useAllProjects();
+  const allTasksQuery = useAllTasks();
+  const allProjectsQuery = useAllProjects();
   const { allProjectUsers: users } = useUsers();
+
+  const tasks = allTasksQuery.data?.pages.flatMap(page => page.data) ?? [];
+  const projects = allProjectsQuery.data?.pages.flatMap(page => page.data) ?? [];
   const [isModalOpen, _setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
@@ -62,7 +65,7 @@ export function Tasks() {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+    <div className="flex flex-col h-full p-4 md:p-6 space-y-4 md:space-y-6">
       <TasksHeader
         count={filteredTasks?.length ?? 0}
       />

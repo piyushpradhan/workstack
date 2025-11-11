@@ -64,17 +64,32 @@ class UserService {
     }
   };
 
-  getUsersByProjectIds = async ({ projectIds }: { projectIds: string[] }) => {
+  getUsersByProjectIds = async ({ projectIds, limit, cursor }: { projectIds: string[]; limit: number; cursor?: string }) => {
     try {
-      return await this.user.findMany({
+      const users = await this.user.findMany({
+        take: limit + 1,
+        skip: cursor ? 1 : 0,
+        cursor: cursor ? { id: cursor } : undefined,
         where: {
           projectMemberships: {
             some: {
               projectId: { in: projectIds }
             }
           }
+        },
+        orderBy: {
+          id: 'desc'
         }
       });
+
+      const hasNextPage = users.length > limit;
+      const usersToReturn = hasNextPage ? users.slice(0, limit) : users;
+
+      return {
+        users: usersToReturn,
+        cursor: usersToReturn.length > 0 ? usersToReturn[usersToReturn.length - 1].id : undefined,
+        hasNextPage
+      };
     } catch (error) {
       throw error;
     }
