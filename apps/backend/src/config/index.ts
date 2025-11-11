@@ -51,6 +51,11 @@ export const config = {
   APP_ENV: process.env.APP_ENV ?? "development",
   APP_NAME: process.env.APP_NAME ?? "WorkStack",
   APP_URL: process.env.APP_URL ?? "http://localhost:3000",
+
+  REDIS_URL: process.env.REDIS_URL ?? "127.0.0.1",
+  REDIS_PORT: process.env.REDIS_PORT ?? "6379",
+  REDIS_USERNAME: process.env.REDIS_USERNAME ?? "redis-user",
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD ?? "password",
 };
 
 export const COOKIES = {

@@ -1,17 +1,17 @@
-import closeWithGrace from 'close-with-grace';
-import { type TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import { config } from './config/index.js';
-import build from './app.js';
+import closeWithGrace from "close-with-grace";
+import { type TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
+import { config } from "./config/index.js";
+import build from "./app.js";
 
 function getLoggerOptions() {
   if (process.stdout.isTTY) {
     return {
       level: config.LOG_LEVEL,
       transport: {
-        target: 'pino-pretty',
+        target: "pino-pretty",
         options: {
-          translateTime: 'HH:MM:ss Z',
-          ignore: 'pid,hostname',
+          translateTime: "HH:MM:ss Z",
+          ignore: "pid,hostname",
         },
       },
     };
@@ -25,7 +25,7 @@ const app = build({
   logger: getLoggerOptions(),
   ajv: {
     customOptions: {
-      coerceTypes: 'array',
+      coerceTypes: "array",
       removeAdditional: false,
     },
   },

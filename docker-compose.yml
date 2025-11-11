@@ -23,6 +23,10 @@ services:
       APP_ENV: ${APP_ENV:-production}
       APP_NAME: ${APP_NAME:-WorkStack}
       APP_URL: ${APP_URL:-http://localhost:3000}
+      REDIS_URL: ${REDIS_URL:-127.0.0.1}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_USERNAME: ${REDIS_USERNAME:-redis-user}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-password}
     ports:
       - "${PORT:-${BACKEND_PORT:-3000}}:3000"
     healthcheck:

@@ -57,6 +57,7 @@
     "fastify-plugin": "^5.0.1",
     "http-errors": "^2.0.0",
     "husky": "^9.1.7",
+    "redis": "^5.9.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {

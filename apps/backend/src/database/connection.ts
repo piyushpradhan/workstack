@@ -1,5 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import { databaseConfig } from '../config/database.js';
+import { PrismaClient } from "@prisma/client";
+import { databaseConfig } from "../config/database.js";
 
 declare global {
   var __prisma: PrismaClient | undefined;
@@ -14,11 +14,11 @@ export const prisma =
       },
     },
     log:
-      process.env.NODE_ENV === 'development'
-        ? ['query', 'error', 'warn']
-        : ['error'],
+      process.env.NODE_ENV === "development"
+        ? ["query", "error", "warn"]
+        : ["error"],
   });
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== "production") {
   globalThis.__prisma = prisma;
 }
