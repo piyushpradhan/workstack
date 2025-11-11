@@ -1,5 +1,6 @@
 import { type RouteHandler } from "fastify";
 import type TasksService from "../services/tasks.service.js";
+import { ResponseHelper } from "../utils/response.js";
 
 class TasksController {
     constructor(
@@ -11,10 +12,10 @@ class TasksController {
             const userId = request.user.sub;
             const tasks = await this.tasksService.getAllUsersTasks({ userId });
 
-            return reply.code(200).send(tasks);
+            return ResponseHelper.success(reply, tasks, "Tasks retrieved successfully");
         } catch (error) {
             request.log.error(error, "Error fetching user tasks");
-            return reply.code(500).send({ error: "Internal server error" });
+            return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch tasks");
         }
     };
 
@@ -23,10 +24,10 @@ class TasksController {
             const userId = request.user.sub;
             const tasks = await this.tasksService.getAllOwnedTasks({ userId });
 
-            return reply.code(200).send(tasks);
+            return ResponseHelper.success(reply, tasks, "Owned tasks retrieved successfully");
         } catch (error) {
             request.log.error(error, "Error fetching owned tasks");
-            return reply.code(500).send({ error: "Internal server error" });
+            return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch owned tasks");
         }
     };
 
@@ -37,10 +38,10 @@ class TasksController {
 
             const tasks = await this.tasksService.getTasksByProject({ projectId, userId });
 
-            return reply.code(200).send(tasks);
+            return ResponseHelper.success(reply, tasks, "Project tasks retrieved successfully");
         } catch (error) {
             request.log.error(error, "Error fetching project tasks");
-            return reply.code(500).send({ error: "Internal server error" });
+            return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch project tasks");
         }
     };
 
@@ -64,10 +65,10 @@ class TasksController {
                 ownerId: userId
             });
 
-            return reply.code(201).send(task);
+            return ResponseHelper.success(reply, task, "Task created successfully", 201);
         } catch (error) {
             request.log.error(error, "Error creating task");
-            return reply.code(500).send({ error: "Internal server error" });
+            return ResponseHelper.error(reply, "Internal server error", 500, "Failed to create task");
         }
     };
 
@@ -79,13 +80,13 @@ class TasksController {
             const task = await this.tasksService.getTaskById({ taskId: id, userId });
 
             if (!task) {
-                return reply.code(404).send({ error: "Task not found" });
+                return ResponseHelper.error(reply, "Task not found", 404, "TaskNotFound");
             }
 
-            return reply.code(200).send(task);
+            return ResponseHelper.success(reply, task, "Task retrieved successfully");
         } catch (error) {
             request.log.error(error, "Error fetching task");
-            return reply.code(500).send({ error: "Internal server error" });
+            return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch task");
         }
     };
 
@@ -124,13 +125,13 @@ class TasksController {
 
 
             if (!task) {
-                return reply.code(404).send({ error: "Task not found" });
+                return ResponseHelper.error(reply, "Task not found", 404, "TaskNotFound");
             }
 
-            return reply.code(200).send(task);
+            return ResponseHelper.success(reply, task, "Task updated successfully");
         } catch (error) {
             request.log.error(error, "Error updating task");
-            return reply.code(500).send({ error: "Internal server error" });
+            return ResponseHelper.error(reply, "Internal server error", 500, "Failed to update task");
         }
     };
 
@@ -145,13 +146,13 @@ class TasksController {
             });
 
             if (!deleted) {
-                return reply.code(404).send({ error: "Task not found" });
+                return ResponseHelper.error(reply, "Task not found", 404, "TaskNotFound");
             }
 
-            return reply.code(204).send();
+            return ResponseHelper.noContent(reply);
         } catch (error) {
             request.log.error(error, "Error deleting task");
-            return reply.code(500).send({ error: "Internal server error" });
+            return ResponseHelper.error(reply, "Internal server error", 500, "Failed to delete task");
         }
     };
 }

@@ -5,6 +5,7 @@ import jwt, {
 } from "@fastify/jwt";
 import { extractToken } from "./jwtCookie.js";
 import { config, TokenTypes } from "../config/index.js";
+import { ResponseHelper } from "../utils/response.js";
 
 const authenticate =
   async (request: FastifyRequest, reply: FastifyReply) => {
@@ -14,11 +15,11 @@ const authenticate =
         verify: {},
       });
     } catch (error) {
-      reply.code(401).send({ error: (error as Error).message });
+      return ResponseHelper.error(reply, (error as Error).message, 401, "AuthenticationFailed");
     }
 
     if (request.user.type !== TokenTypes.ACCESS) {
-      reply.code(401).send({ error: "Invalid token type" });
+      return ResponseHelper.error(reply, "Invalid token type", 401, "InvalidTokenType");
     }
   };
 

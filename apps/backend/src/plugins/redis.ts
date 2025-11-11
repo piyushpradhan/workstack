@@ -13,43 +13,61 @@ declare module "fastify" {
 }
 
 const redisPlugin: FastifyPluginAsync = fp(async (app) => {
-  const client = createClient({
-    username: config.REDIS_USERNAME,
-    password: config.REDIS_PASSWORD,
-    socket: {
-      host: config.REDIS_URL,
-      port: parseInt(config.REDIS_PORT),
-      reconnectStrategy: (retries) => {
-        if (retries > 3) {
-          app.log.error('Redis reconnection failed after 3 retries');
-          return new Error('Redis connection failed');
-        }
-        return Math.min(retries * 100, 3000);
-      },
-      connectTimeout: 10000,
-    },
-    pingInterval: 30000,
-  });
+  let client: RedisClientType | undefined;
 
-  client.on("error", (error) => {
+  if (config.APP_ENV === "production") {
+    createClient({
+      username: config.REDIS_USERNAME,
+      password: config.REDIS_PASSWORD,
+      socket: {
+        host: config.REDIS_URL,
+        port: parseInt(config.REDIS_PORT),
+        reconnectStrategy: (retries) => {
+          if (retries > 3) {
+            app.log.error('Redis reconnection failed after 3 retries');
+            return new Error('Redis connection failed');
+          }
+          return Math.min(retries * 100, 3000);
+        },
+        connectTimeout: 10000,
+      },
+      pingInterval: 30000,
+    });
+  } else {
+    client = createClient({
+      url: "redis://localhost:6379",
+      socket: {
+        reconnectStrategy: (retries) => {
+          if (retries > 3) {
+            app.log.error('Redis reconnection failed after 3 retries');
+            return new Error('Redis connection failed');
+          }
+          return Math.min(retries * 100, 3000);
+        },
+        connectTimeout: 10000,
+      },
+    })
+  }
+
+  client?.on("error", (error) => {
     app.log.error({ err: error }, "Redis client error");
   });
 
-  client.on("connect", () => {
+  client?.on("connect", () => {
     app.log.info("Redis client connected");
   });
 
-  client.on("reconnecting", () => {
+  client?.on("reconnecting", () => {
     app.log.warn("Redis client reconnecting");
   });
 
-  await client.connect();
+  await client?.connect();
 
   app.decorate("redis", client as RedisClientType);
 
   // Graceful shutdown
   app.addHook('onClose', async () => {
-    await client.quit();
+    await client?.quit();
     app.log.info("Redis client disconnected");
   });
 });

@@ -16,6 +16,9 @@ export interface User {
 
 export type UserRole = "ADMIN" | "MANAGER" | "MEMBER" | "VIEWER";
 
+// Note: This type is kept for backward compatibility
+// The actual API response now follows the standardized format:
+// { success: true, data: User[], message?: string }
 export interface UsersResponse {
   users: User[];
   total: number;

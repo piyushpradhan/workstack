@@ -25,7 +25,7 @@ export class ResponseHelper {
     const response: ApiResponse = {
       success: false,
       message,
-      error,
+      error: error || message,
     };
     reply.code(statusCode).send(response);
   }
@@ -48,8 +48,34 @@ export class ResponseHelper {
         limit,
         total,
         totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
       },
     };
     reply.code(200).send(response);
+  }
+
+  static cursorPaginated<T>(
+    reply: FastifyReply,
+    data: T[],
+    cursor?: string,
+    hasNextPage = false,
+    message?: string,
+  ): void {
+    const response: ApiResponse<T[]> = {
+      success: true,
+      data,
+      message,
+      cursor,
+      meta: {
+        hasNextPage,
+        hasPreviousPage: !!cursor,
+      },
+    };
+    reply.code(200).send(response);
+  }
+
+  static noContent(reply: FastifyReply): void {
+    reply.code(204).send();
   }
 }

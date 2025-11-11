@@ -23,4 +23,11 @@ export type {
   UpdateProjectRequest,
 } from "./projects/types";
 
+// Export standardized API response types
+export type {
+  ApiResponse,
+  PaginatedResponse,
+  CursorPaginatedResponse,
+} from "./types";
+
 export const BASE_URL = import.meta.env.VITE_API_URL;

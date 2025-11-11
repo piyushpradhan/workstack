@@ -1,6 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import { Static } from '@sinclair/typebox';
-import { BaseSchemas, ResponseSchemas } from './base.js';
+import { BaseSchemas, ResponseSchemas, createSuccessResponse, createArrayResponse } from './base.js';
 
 // Base entity schemas
 const ProjectUser = Type.Object({
@@ -169,15 +169,8 @@ export const ProjectRouteSchemas = {
         summary: 'List User Projects',
         security: [{ bearerAuth: [] }],
         response: {
-            200: {
-                description: 'Projects retrieved successfully',
-                type: 'array',
-                items: ProjectSchemas.ProjectWithRelations,
-            },
-            401: {
-                description: 'Unauthorized - invalid or missing token',
-                ...BaseSchemas.Error,
-            },
+            200: createArrayResponse(ProjectSchemas.ProjectWithRelations, 'Projects retrieved successfully'),
+            401: BaseSchemas.Error,
         },
     },
 
@@ -187,15 +180,8 @@ export const ProjectRouteSchemas = {
         summary: 'List Owned Projects',
         security: [{ bearerAuth: [] }],
         response: {
-            200: {
-                description: 'Owned projects retrieved successfully',
-                type: 'array',
-                items: ProjectSchemas.ProjectWithOwners,
-            },
-            401: {
-                description: 'Unauthorized - invalid or missing token',
-                ...BaseSchemas.Error,
-            },
+            200: createArrayResponse(ProjectSchemas.ProjectWithOwners, 'Owned projects retrieved successfully'),
+            401: BaseSchemas.Error,
         },
     },
 
@@ -206,18 +192,9 @@ export const ProjectRouteSchemas = {
         security: [{ bearerAuth: [] }],
         body: ProjectRequestSchemas.CreateProject,
         response: {
-            201: {
-                description: 'Project created successfully',
-                ...ProjectSchemas.Project,
-            },
-            400: {
-                description: 'Bad request - validation error',
-                ...BaseSchemas.Error,
-            },
-            401: {
-                description: 'Unauthorized - invalid or missing token',
-                ...BaseSchemas.Error,
-            },
+            201: createSuccessResponse(ProjectSchemas.Project, 'Project created successfully'),
+            400: BaseSchemas.Error,
+            401: BaseSchemas.Error,
         },
     },
 
@@ -233,22 +210,10 @@ export const ProjectRouteSchemas = {
             }),
         }),
         response: {
-            200: {
-                description: 'Project retrieved successfully',
-                ...ProjectSchemas.ProjectWithUsers,
-            },
-            401: {
-                description: 'Unauthorized - invalid or missing token',
-                ...BaseSchemas.Error,
-            },
-            403: {
-                description: "Forbidden - user doesn't have access to this project",
-                ...BaseSchemas.Error,
-            },
-            404: {
-                description: 'Project not found',
-                ...BaseSchemas.Error,
-            },
+            200: createSuccessResponse(ProjectSchemas.ProjectWithUsers, 'Project retrieved successfully'),
+            401: BaseSchemas.Error,
+            403: BaseSchemas.Error,
+            404: BaseSchemas.Error,
         },
     },
 
@@ -265,26 +230,11 @@ export const ProjectRouteSchemas = {
         }),
         body: ProjectRequestSchemas.UpdateProject,
         response: {
-            200: {
-                description: 'Project updated successfully',
-                ...ProjectSchemas.Project,
-            },
-            400: {
-                description: 'Bad request - validation error',
-                ...BaseSchemas.Error,
-            },
-            401: {
-                description: 'Unauthorized - invalid or missing token',
-                ...BaseSchemas.Error,
-            },
-            403: {
-                description: 'Forbidden - user is not an owner of this project',
-                ...BaseSchemas.Error,
-            },
-            404: {
-                description: 'Project not found',
-                ...BaseSchemas.Error,
-            },
+            200: createSuccessResponse(ProjectSchemas.Project, 'Project updated successfully'),
+            400: BaseSchemas.Error,
+            401: BaseSchemas.Error,
+            403: BaseSchemas.Error,
+            404: BaseSchemas.Error,
         },
     },
 
@@ -300,22 +250,10 @@ export const ProjectRouteSchemas = {
             }),
         }),
         response: {
-            204: {
-                description: 'Project deleted successfully',
-                type: 'null',
-            },
-            401: {
-                description: 'Unauthorized - invalid or missing token',
-                ...BaseSchemas.Error,
-            },
-            403: {
-                description: 'Forbidden - user is not an owner of this project',
-                ...BaseSchemas.Error,
-            },
-            404: {
-                description: 'Project not found',
-                ...BaseSchemas.Error,
-            },
+            204: Type.Null(),
+            401: BaseSchemas.Error,
+            403: BaseSchemas.Error,
+            404: BaseSchemas.Error,
         },
     },
 
@@ -332,26 +270,11 @@ export const ProjectRouteSchemas = {
         }),
         body: ProjectRequestSchemas.AddProjectMember,
         response: {
-            200: {
-                description: 'Member added successfully',
-                ...ResponseSchemas.Success,
-            },
-            400: {
-                description: 'Bad request - validation error',
-                ...BaseSchemas.Error,
-            },
-            401: {
-                description: 'Unauthorized - invalid or missing token',
-                ...BaseSchemas.Error,
-            },
-            403: {
-                description: 'Forbidden - user is not an owner of this project',
-                ...BaseSchemas.Error,
-            },
-            404: {
-                description: 'Project not found',
-                ...BaseSchemas.Error,
-            },
+            200: ResponseSchemas.Success,
+            400: BaseSchemas.Error,
+            401: BaseSchemas.Error,
+            403: BaseSchemas.Error,
+            404: BaseSchemas.Error,
         },
     },
 };

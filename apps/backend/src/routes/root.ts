@@ -1,4 +1,5 @@
 import { type FastifyPluginAsync } from 'fastify';
+import { ResponseHelper } from '../utils/response.js';
 
 const routes: FastifyPluginAsync = async (app): Promise<void> => {
   app.route({
@@ -10,14 +11,13 @@ const routes: FastifyPluginAsync = async (app): Promise<void> => {
       summary: 'Get API status',
       response: {
         200: {
-          type: 'string',
+          type: 'object',
           description: 'API is running',
-          example: 'Hello World',
         },
       },
     },
     handler: async (request, reply) => {
-      reply.send('Hello World');
+      return ResponseHelper.success(reply, { status: 'ok', message: 'API is running' }, 'API is running');
     },
   });
 };

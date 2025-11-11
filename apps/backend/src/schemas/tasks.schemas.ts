@@ -124,9 +124,37 @@ export const taskWithOwnersSchema = {
 export const errorSchema = {
     type: "object",
     properties: {
+        success: { type: "boolean", const: false },
+        message: { type: "string" },
         error: { type: "string" }
-    }
+    },
+    required: ["success", "message", "error"]
 };
+
+const createSuccessResponseSchema = (dataSchema: any, description?: string) => ({
+    type: "object",
+    properties: {
+        success: { type: "boolean", const: true },
+        data: dataSchema,
+        message: { type: "string" }
+    },
+    required: ["success", "data"],
+    description: description
+});
+
+const createArrayResponseSchema = (itemSchema: any, description?: string) => ({
+    type: "object",
+    properties: {
+        success: { type: "boolean", const: true },
+        data: {
+            type: "array",
+            items: itemSchema
+        },
+        message: { type: "string" }
+    },
+    required: ["success", "data"],
+    description: description
+});
 
 // Route schemas
 export const listTasksSchema = {
@@ -135,15 +163,8 @@ export const listTasksSchema = {
     summary: "List User Tasks",
     security: [{ bearerAuth: [] }],
     response: {
-        200: {
-            description: "Tasks retrieved successfully",
-            type: "array",
-            items: taskWithRelationsSchema
-        },
-        401: {
-            description: "Unauthorized - invalid or missing token",
-            ...errorSchema
-        }
+        200: createArrayResponseSchema(taskWithRelationsSchema, "Tasks retrieved successfully"),
+        401: errorSchema
     }
 };
 
@@ -153,15 +174,8 @@ export const listOwnedTasksSchema = {
     summary: "List Owned Tasks",
     security: [{ bearerAuth: [] }],
     response: {
-        200: {
-            description: "Owned tasks retrieved successfully",
-            type: "array",
-            items: taskWithOwnersSchema
-        },
-        401: {
-            description: "Unauthorized - invalid or missing token",
-            ...errorSchema
-        }
+        200: createArrayResponseSchema(taskWithOwnersSchema, "Owned tasks retrieved successfully"),
+        401: errorSchema
     }
 };
 
@@ -171,19 +185,9 @@ export const listTasksByProjectSchema = {
     summary: "List Project Tasks",
     security: [{ bearerAuth: [] }],
     response: {
-        200: {
-            description: "Project tasks retrieved successfully",
-            type: "array",
-            items: taskWithRelationsSchema
-        },
-        401: {
-            description: "Unauthorized - invalid or missing token",
-            ...errorSchema
-        },
-        404: {
-            description: "Project not found or user doesn't have access",
-            ...errorSchema
-        }
+        200: createArrayResponseSchema(taskWithRelationsSchema, "Project tasks retrieved successfully"),
+        401: errorSchema,
+        404: errorSchema
     }
 };
 
@@ -193,18 +197,9 @@ export const createTaskSchema = {
     summary: "Create Task",
     security: [{ bearerAuth: [] }],
     response: {
-        201: {
-            description: "Task created successfully",
-            ...taskSchema
-        },
-        400: {
-            description: "Bad request - validation error",
-            ...errorSchema
-        },
-        401: {
-            description: "Unauthorized - invalid or missing token",
-            ...errorSchema
-        }
+        201: createSuccessResponseSchema(taskSchema, "Task created successfully"),
+        400: errorSchema,
+        401: errorSchema
     }
 };
 
@@ -214,22 +209,10 @@ export const getTaskSchema = {
     summary: "Get Task",
     security: [{ bearerAuth: [] }],
     response: {
-        200: {
-            description: "Task retrieved successfully",
-            ...taskWithRelationsSchema
-        },
-        401: {
-            description: "Unauthorized - invalid or missing token",
-            ...errorSchema
-        },
-        403: {
-            description: "Forbidden - user doesn't have access to this task",
-            ...errorSchema
-        },
-        404: {
-            description: "Task not found",
-            ...errorSchema
-        }
+        200: createSuccessResponseSchema(taskWithRelationsSchema, "Task retrieved successfully"),
+        401: errorSchema,
+        403: errorSchema,
+        404: errorSchema
     }
 };
 
@@ -239,32 +222,17 @@ export const updateTaskSchema = {
     summary: "Update Task",
     security: [{ bearerAuth: [] }],
     response: {
-        200: {
-            description: "Task updated successfully",
-            ...{
-                ...taskSchema,
-                properties: {
-                    ...taskSchema.properties,
-                    projectId: { type: "string" }
-                }
+        200: createSuccessResponseSchema({
+            ...taskSchema,
+            properties: {
+                ...taskSchema.properties,
+                projectId: { type: "string" }
             }
-        },
-        400: {
-            description: "Bad request - validation error",
-            ...errorSchema
-        },
-        401: {
-            description: "Unauthorized - invalid or missing token",
-            ...errorSchema
-        },
-        403: {
-            description: "Forbidden - user is not an owner of this task",
-            ...errorSchema
-        },
-        404: {
-            description: "Task not found",
-            ...errorSchema
-        }
+        }, "Task updated successfully"),
+        400: errorSchema,
+        401: errorSchema,
+        403: errorSchema,
+        404: errorSchema
     }
 };
 
@@ -278,17 +246,8 @@ export const deleteTaskSchema = {
             description: "Task deleted successfully",
             type: "null"
         },
-        401: {
-            description: "Unauthorized - invalid or missing token",
-            ...errorSchema
-        },
-        403: {
-            description: "Forbidden - user is not an owner of this task",
-            ...errorSchema
-        },
-        404: {
-            description: "Task not found",
-            ...errorSchema
-        }
+        401: errorSchema,
+        403: errorSchema,
+        404: errorSchema
     }
 };

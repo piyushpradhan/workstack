@@ -3,6 +3,7 @@ import { type FastifyReply, type FastifyRequest } from "fastify";
 import httpErrors from "http-errors";
 import { config, COOKIES } from "../config/index.js";
 import { type User } from "@prisma/client";
+import { ResponseHelper } from "../utils/response.js";
 
 interface SendAccessTokenAndSessionId {
   user: User;
@@ -128,12 +129,12 @@ export const sendAccessTokenAndSessionId = (
     );
 
     if (redirectTo) reply.redirect(redirectTo);
-    else reply.send();
+    else ResponseHelper.noContent(reply);
 
     return;
   }
 
-  reply.send({ token: accessToken, sessionId, user });
+  ResponseHelper.success(reply, { token: accessToken, sessionId, user }, "Authentication successful");
 };
 
 export const getSessionId = (request: FastifyRequest) => {

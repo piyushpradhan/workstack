@@ -1,6 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import { Static } from '@sinclair/typebox';
-import { BaseSchemas, ResponseSchemas } from './base.js';
+import { BaseSchemas, ResponseSchemas, createSuccessResponse } from './base.js';
 
 export const AuthRequestSchemas = {
     Register: Type.Object({
@@ -147,18 +147,9 @@ export const AuthRouteSchemas = {
         summary: 'User Registration',
         body: AuthRequestSchemas.Register,
         response: {
-            201: {
-                description: 'User successfully created',
-                ...AuthResponseSchemas.RegisterSuccess,
-            },
-            400: {
-                description: 'Bad request - validation error',
-                ...BaseSchemas.Error,
-            },
-            409: {
-                description: 'Conflict - user already exists',
-                ...BaseSchemas.Error,
-            },
+            201: createSuccessResponse(Type.Null(), 'User registered successfully'),
+            400: BaseSchemas.Error,
+            409: BaseSchemas.Error,
         },
     },
 
@@ -168,19 +159,9 @@ export const AuthRouteSchemas = {
         summary: 'User Login',
         body: AuthRequestSchemas.Login,
         response: {
-            200: {
-                description: 'Login successful',
-                ...AuthResponseSchemas.LoginSuccess,
-            },
-            401: {
-                description: 'Unauthorized - invalid credentials',
-                type: 'string',
-                example: 'Email or password is invalid',
-            },
-            400: {
-                description: 'Bad request - validation error',
-                ...BaseSchemas.Error,
-            },
+            200: createSuccessResponse(AuthResponseSchemas.LoginSuccess, 'Authentication successful'),
+            401: BaseSchemas.Error,
+            400: BaseSchemas.Error,
         },
     },
 
@@ -190,18 +171,9 @@ export const AuthRouteSchemas = {
         summary: 'Refresh Token',
         body: AuthRequestSchemas.RefreshToken,
         response: {
-            200: {
-                description: 'Token refreshed successfully',
-                ...AuthResponseSchemas.LoginSuccess,
-            },
-            401: {
-                description: 'Unauthorized - invalid refresh token',
-                ...BaseSchemas.Error,
-            },
-            400: {
-                description: 'Bad request - validation error',
-                ...BaseSchemas.Error,
-            },
+            200: createSuccessResponse(AuthResponseSchemas.LoginSuccess, 'Token refreshed successfully'),
+            401: BaseSchemas.Error,
+            400: BaseSchemas.Error,
         },
     },
 
@@ -211,14 +183,8 @@ export const AuthRouteSchemas = {
         summary: 'User Logout',
         body: AuthRequestSchemas.Logout,
         response: {
-            200: {
-                description: 'Logout successful',
-                ...ResponseSchemas.Success,
-            },
-            401: {
-                description: 'Unauthorized - invalid token',
-                ...BaseSchemas.Error,
-            },
+            200: ResponseSchemas.Success,
+            401: BaseSchemas.Error,
         },
     },
 
@@ -227,14 +193,8 @@ export const AuthRouteSchemas = {
         tags: ['Authentication'],
         summary: 'Get User Sessions',
         response: {
-            200: {
-                description: 'Sessions retrieved successfully',
-                ...AuthResponseSchemas.SessionsList,
-            },
-            401: {
-                description: 'Unauthorized - invalid token',
-                ...BaseSchemas.Error,
-            },
+            200: createSuccessResponse(AuthResponseSchemas.SessionsList, 'Sessions retrieved successfully'),
+            401: BaseSchemas.Error,
         },
     },
 
@@ -244,14 +204,8 @@ export const AuthRouteSchemas = {
         summary: 'Request Password Reset',
         body: AuthRequestSchemas.PasswordResetRequest,
         response: {
-            200: {
-                description: 'Password reset email sent',
-                ...ResponseSchemas.Success,
-            },
-            400: {
-                description: 'Bad request - validation error',
-                ...BaseSchemas.Error,
-            },
+            200: ResponseSchemas.Success,
+            400: BaseSchemas.Error,
         },
     },
 
@@ -261,14 +215,8 @@ export const AuthRouteSchemas = {
         summary: 'Reset Password',
         body: AuthRequestSchemas.PasswordReset,
         response: {
-            200: {
-                description: 'Password reset successfully',
-                ...ResponseSchemas.Success,
-            },
-            400: {
-                description: 'Bad request - validation error or invalid token',
-                ...BaseSchemas.Error,
-            },
+            200: ResponseSchemas.Success,
+            400: BaseSchemas.Error,
         },
     },
 
@@ -278,18 +226,9 @@ export const AuthRouteSchemas = {
         summary: 'Change Password',
         body: AuthRequestSchemas.ChangePassword,
         response: {
-            200: {
-                description: 'Password changed successfully',
-                ...ResponseSchemas.Success,
-            },
-            400: {
-                description: 'Bad request - validation error',
-                ...BaseSchemas.Error,
-            },
-            401: {
-                description: 'Unauthorized - invalid current password',
-                ...BaseSchemas.Error,
-            },
+            200: ResponseSchemas.Success,
+            400: BaseSchemas.Error,
+            401: BaseSchemas.Error,
         },
     },
 };

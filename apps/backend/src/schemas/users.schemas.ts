@@ -1,6 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import { Static } from '@sinclair/typebox';
-import { BaseSchemas, ResponseSchemas } from './base.js';
+import { BaseSchemas, ResponseSchemas, createSuccessResponse, createArrayResponse } from './base.js';
 
 // Base user schemas
 const User = Type.Object({
@@ -112,18 +112,9 @@ export const UserRouteSchemas = {
         summary: 'Get Current User',
         security: [{ bearerAuth: [] }],
         response: {
-            200: {
-                description: 'Current user details retrieved successfully',
-                ...UserResponseSchemas.UserProfile,
-            },
-            401: {
-                description: 'Unauthorized - invalid or missing token',
-                ...BaseSchemas.Error,
-            },
-            500: {
-                description: 'Internal server error',
-                ...BaseSchemas.Error,
-            },
+            200: createSuccessResponse(UserResponseSchemas.UserProfile, 'Current user details retrieved successfully'),
+            401: BaseSchemas.Error,
+            500: BaseSchemas.Error,
         },
     },
 
@@ -136,26 +127,11 @@ export const UserRouteSchemas = {
             id: BaseSchemas.Id,
         }),
         response: {
-            200: {
-                description: 'User details retrieved successfully',
-                ...UserResponseSchemas.User,
-            },
-            400: {
-                description: 'Bad request - invalid user ID',
-                ...BaseSchemas.Error,
-            },
-            401: {
-                description: 'Unauthorized - invalid or missing token',
-                ...BaseSchemas.Error,
-            },
-            404: {
-                description: 'User not found',
-                ...BaseSchemas.Error,
-            },
-            500: {
-                description: 'Internal server error',
-                ...BaseSchemas.Error,
-            },
+            200: createSuccessResponse(UserResponseSchemas.User, 'User details retrieved successfully'),
+            400: BaseSchemas.Error,
+            401: BaseSchemas.Error,
+            404: BaseSchemas.Error,
+            500: BaseSchemas.Error,
         },
     },
 
@@ -168,26 +144,11 @@ export const UserRouteSchemas = {
             email: BaseSchemas.Email,
         }),
         response: {
-            200: {
-                description: 'User details retrieved successfully',
-                ...UserResponseSchemas.User,
-            },
-            400: {
-                description: 'Bad request - invalid email',
-                ...BaseSchemas.Error,
-            },
-            401: {
-                description: 'Unauthorized - invalid or missing token',
-                ...BaseSchemas.Error,
-            },
-            404: {
-                description: 'User not found',
-                ...BaseSchemas.Error,
-            },
-            500: {
-                description: 'Internal server error',
-                ...BaseSchemas.Error,
-            },
+            200: createSuccessResponse(UserResponseSchemas.User, 'User details retrieved successfully'),
+            400: BaseSchemas.Error,
+            401: BaseSchemas.Error,
+            404: BaseSchemas.Error,
+            500: BaseSchemas.Error,
         },
     },
 
@@ -198,22 +159,10 @@ export const UserRouteSchemas = {
         security: [{ bearerAuth: [] }],
         body: UserRequestSchemas.UpdateProfile,
         response: {
-            200: {
-                description: 'Profile updated successfully',
-                ...UserResponseSchemas.UserProfile,
-            },
-            400: {
-                description: 'Bad request - validation error',
-                ...BaseSchemas.Error,
-            },
-            401: {
-                description: 'Unauthorized - invalid or missing token',
-                ...BaseSchemas.Error,
-            },
-            500: {
-                description: 'Internal server error',
-                ...BaseSchemas.Error,
-            },
+            200: createSuccessResponse(UserResponseSchemas.UserProfile, 'Profile updated successfully'),
+            400: BaseSchemas.Error,
+            401: BaseSchemas.Error,
+            500: BaseSchemas.Error,
         },
     },
 
@@ -224,26 +173,11 @@ export const UserRouteSchemas = {
         security: [{ bearerAuth: [] }],
         body: UserRequestSchemas.ChangeEmail,
         response: {
-            200: {
-                description: 'Email change request sent successfully',
-                ...ResponseSchemas.Success,
-            },
-            400: {
-                description: 'Bad request - validation error',
-                ...BaseSchemas.Error,
-            },
-            401: {
-                description: 'Unauthorized - invalid password',
-                ...BaseSchemas.Error,
-            },
-            409: {
-                description: 'Conflict - email already exists',
-                ...BaseSchemas.Error,
-            },
-            500: {
-                description: 'Internal server error',
-                ...BaseSchemas.Error,
-            },
+            200: ResponseSchemas.Success,
+            400: BaseSchemas.Error,
+            401: BaseSchemas.Error,
+            409: BaseSchemas.Error,
+            500: BaseSchemas.Error,
         },
     },
 
@@ -264,22 +198,10 @@ export const UserRouteSchemas = {
             ])),
         }),
         response: {
-            200: {
-                description: 'Users retrieved successfully',
-                ...UserResponseSchemas.UserList,
-            },
-            401: {
-                description: 'Unauthorized - invalid or missing token',
-                ...BaseSchemas.Error,
-            },
-            403: {
-                description: 'Forbidden - admin access required',
-                ...BaseSchemas.Error,
-            },
-            500: {
-                description: 'Internal server error',
-                ...BaseSchemas.Error,
-            },
+            200: createArrayResponse(UserResponseSchemas.User, 'Users retrieved successfully'),
+            401: BaseSchemas.Error,
+            403: BaseSchemas.Error,
+            500: BaseSchemas.Error,
         },
     },
 
@@ -292,22 +214,10 @@ export const UserRouteSchemas = {
             projectIds: Type.String({ description: "Comma separated list of project IDs" }),
         }),
         response: {
-            200: {
-                description: "Users retrieved successfully",
-                ...UserResponseSchemas.UserList
-            },
-            401: {
-                description: "Unauthorized - invalid or missing token",
-                ...BaseSchemas.Error,
-            },
-            403: {
-                description: "Forbidden - admin access required",
-                ...BaseSchemas.Error,
-            },
-            500: {
-                description: "Internal server error",
-                ...BaseSchemas.Error,
-            },
+            200: createArrayResponse(UserResponseSchemas.User, "Users retrieved successfully"),
+            401: BaseSchemas.Error,
+            403: BaseSchemas.Error,
+            500: BaseSchemas.Error,
         },
     },
 

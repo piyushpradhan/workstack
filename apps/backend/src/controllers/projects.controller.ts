@@ -1,5 +1,6 @@
 import { type RouteHandler } from "fastify";
 import type ProjectsService from "../services/projects.service.js";
+import { ResponseHelper } from "../utils/response.js";
 
 
 class ProjectsController {
@@ -12,10 +13,10 @@ class ProjectsController {
       const userId = request.user.sub;
       const projects = await this.projectsService.getAllUsersProjects({ userId });
 
-      return reply.code(200).send(projects);
+      return ResponseHelper.success(reply, projects, "Projects retrieved successfully");
     } catch (error) {
       request.log.error(error, "Error fetching user projects");
-      return reply.code(500).send({ error: "Internal server error" });
+      return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch projects");
     }
   };
 
@@ -24,10 +25,10 @@ class ProjectsController {
       const userId = request.user.sub;
       const projects = await this.projectsService.getAllOwnedProjects({ userId });
 
-      return reply.code(200).send(projects);
+      return ResponseHelper.success(reply, projects, "Owned projects retrieved successfully");
     } catch (error) {
       request.log.error(error, "Error fetching owned projects");
-      return reply.code(500).send({ error: "Internal server error" });
+      return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch owned projects");
     }
   };
 
@@ -42,10 +43,10 @@ class ProjectsController {
         ownerId: userId
       });
 
-      return reply.code(201).send(project);
+      return ResponseHelper.success(reply, project, "Project created successfully", 201);
     } catch (error) {
       request.log.error(error, "Error creating project");
-      return reply.code(500).send({ error: "Internal server error" });
+      return ResponseHelper.error(reply, "Internal server error", 500, "Failed to create project");
     }
   };
 
@@ -57,13 +58,13 @@ class ProjectsController {
       const project = await this.projectsService.getProjectById({ projectId: id, userId });
 
       if (!project) {
-        return reply.code(404).send({ error: "Project not found" });
+        return ResponseHelper.error(reply, "Project not found", 404, "ProjectNotFound");
       }
 
-      return reply.code(200).send(project);
+      return ResponseHelper.success(reply, project, "Project retrieved successfully");
     } catch (error) {
       request.log.error(error, "Error fetching project");
-      return reply.code(500).send({ error: "Internal server error" });
+      return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch project");
     }
   };
 
@@ -80,13 +81,13 @@ class ProjectsController {
       });
 
       if (!project) {
-        return reply.code(404).send({ error: "Project not found" });
+        return ResponseHelper.error(reply, "Project not found", 404, "ProjectNotFound");
       }
 
-      return reply.code(200).send(project);
+      return ResponseHelper.success(reply, project, "Project updated successfully");
     } catch (error) {
       request.log.error(error, "Error updating project");
-      return reply.code(500).send({ error: "Internal server error" });
+      return ResponseHelper.error(reply, "Internal server error", 500, "Failed to update project");
     }
   };
 
@@ -101,13 +102,13 @@ class ProjectsController {
       });
 
       if (!deleted) {
-        return reply.code(404).send({ error: "Project not found" });
+        return ResponseHelper.error(reply, "Project not found", 404, "ProjectNotFound");
       }
 
-      return reply.code(204).send();
+      return ResponseHelper.noContent(reply);
     } catch (error) {
       request.log.error(error, "Error deleting project");
-      return reply.code(500).send({ error: "Internal server error" });
+      return ResponseHelper.error(reply, "Internal server error", 500, "Failed to delete project");
     }
   };
 }

@@ -5,6 +5,7 @@ import axios, {
 } from "axios";
 import { BASE_URL } from "@/api";
 import { AuthError } from "./auth/errorHandler";
+import type { ApiResponse } from "./types";
 
 class ApiClient {
   private axiosInstance: AxiosInstance;
@@ -40,6 +41,36 @@ class ApiClient {
     this.failedQueue = [];
   }
 
+  /**
+   * Extracts data from standardized API response
+   * Handles both old format (direct data) and new format (wrapped in ApiResponse)
+   */
+  private extractData<T>(response: AxiosResponse<ApiResponse<T> | T>): T {
+    // For 204 No Content, return undefined
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
+    const data = response.data;
+
+    // Handle empty responses
+    if (!data) {
+      return undefined as T;
+    }
+
+    // Check if response follows the new standardized format
+    if (typeof data === "object" && "success" in data) {
+      const apiResponse = data as ApiResponse<T>;
+
+      // Return the data field from the standardized response
+      // If data is undefined, return undefined (for void responses)
+      return apiResponse.data as T;
+    }
+
+    // Fallback to old format (direct data)
+    return data as T;
+  }
+
   private setupInterceptors() {
     // No request auth header injection; backend authenticates via HttpOnly cookies
     this.axiosInstance.interceptors.request.use(
@@ -49,6 +80,10 @@ class ApiClient {
 
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
+        // For 204 No Content, return early
+        if (response.status === 204) {
+          return response;
+        }
         return response;
       },
       async (error: any) => {
@@ -93,13 +128,28 @@ class ApiClient {
           }
         }
 
-        // Handle other errors
+        // Handle other errors - extract from standardized error response
         if (error.response) {
+          const errorData = error.response.data;
+          let message = "An error occurred";
+          let errorCode = "UNKNOWN_ERROR";
+
+          // Check if error follows the new standardized format
+          if (errorData && typeof errorData === "object" && "success" in errorData) {
+            const apiError = errorData as ApiResponse;
+            message = apiError.message || apiError.error || message;
+            errorCode = apiError.error || errorCode;
+          } else if (errorData?.message) {
+            // Fallback to old format
+            message = errorData.message;
+            errorCode = errorData.code || errorData.error || errorCode;
+          }
+
           const authError = new AuthError(
-            error.response.data?.message || "An error occurred",
-            error.response.data?.code || "UNKNOWN_ERROR",
+            message,
+            errorCode,
             error.response.status,
-            error.response.data?.field,
+            errorData?.field,
           );
           return Promise.reject(authError);
         }
@@ -110,8 +160,8 @@ class ApiClient {
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.axiosInstance.get<T>(url, config);
-    return response.data;
+    const response = await this.axiosInstance.get<ApiResponse<T> | T>(url, config);
+    return this.extractData<T>(response);
   }
 
   async post<T>(
@@ -119,8 +169,8 @@ class ApiClient {
     data?: any,
     config?: AxiosRequestConfig,
   ): Promise<T> {
-    const response = await this.axiosInstance.post<T>(url, data, config);
-    return response.data;
+    const response = await this.axiosInstance.post<ApiResponse<T> | T>(url, data, config);
+    return this.extractData<T>(response);
   }
 
   async put<T>(
@@ -128,8 +178,8 @@ class ApiClient {
     data?: any,
     config?: AxiosRequestConfig,
   ): Promise<T> {
-    const response = await this.axiosInstance.put<T>(url, data, config);
-    return response.data;
+    const response = await this.axiosInstance.put<ApiResponse<T> | T>(url, data, config);
+    return this.extractData<T>(response);
   }
 
   async patch<T>(
@@ -137,13 +187,13 @@ class ApiClient {
     data?: any,
     config?: AxiosRequestConfig,
   ): Promise<T> {
-    const response = await this.axiosInstance.patch<T>(url, data, config);
-    return response.data;
+    const response = await this.axiosInstance.patch<ApiResponse<T> | T>(url, data, config);
+    return this.extractData<T>(response);
   }
 
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.axiosInstance.delete<T>(url, config);
-    return response.data;
+    const response = await this.axiosInstance.delete<ApiResponse<T> | T>(url, config);
+    return this.extractData<T>(response);
   }
 }
 

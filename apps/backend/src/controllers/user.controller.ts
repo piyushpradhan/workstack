@@ -1,5 +1,6 @@
 import { type RouteHandler } from "fastify";
 import type UserService from "../services/user.service.js";
+import { ResponseHelper } from "../utils/response.js";
 
 class UserController {
     constructor(
@@ -12,16 +13,16 @@ class UserController {
 
             if (uid) {
                 const user = await this.userService.getUserByUid({ uid });
-                return reply.code(200).send(user);
+                return ResponseHelper.success(reply, user, "User retrieved successfully");
             } else if (email) {
                 const user = await this.userService.getUserByEmail({ email });
-                return reply.code(200).send(user);
+                return ResponseHelper.success(reply, user, "User retrieved successfully");
             }
 
-            return reply.code(400).send({ error: "Invalid request" });
+            return ResponseHelper.error(reply, "Invalid request", 400, "InvalidRequest");
         } catch (error) {
             request.log.error(error, "Error fetching user");
-            return reply.code(500).send({ error: "Internal server error" });
+            return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch user");
         }
     }
 
@@ -29,10 +30,10 @@ class UserController {
         try {
             const uid = request.user.sub;
             const user = await this.userService.getUserByUid({ uid });
-            return reply.code(200).send(user);
+            return ResponseHelper.success(reply, user, "Current user retrieved successfully");
         } catch (error) {
             request.log.error(error, "Error fetching current user");
-            return reply.code(500).send({ error: "Internal server error" });
+            return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch current user");
         }
     }
 
@@ -40,10 +41,10 @@ class UserController {
         try {
             const id = (request.params as { id: string }).id;
             const user = await this.userService.getUserByUid({ uid: id });
-            return reply.code(200).send(user);
+            return ResponseHelper.success(reply, user, "User retrieved successfully");
         } catch (error) {
             request.log.error(error, "Error fetching user by ID");
-            return reply.code(500).send({ error: "Internal server error" });
+            return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch user");
         }
     }
 
@@ -51,15 +52,10 @@ class UserController {
         try {
             const projectIds = (request.params as { projectIds: string }).projectIds.split(",");
             const users = await this.userService.getUsersByProjectIds({ projectIds });
-            return reply.code(200).send({
-                users,
-                total: users.length,
-                page: 1,
-                limit: users.length
-            });
+            return ResponseHelper.success(reply, users, "Users retrieved successfully");
         } catch (error) {
             request.log.error(error, "Error fetching users by projects");
-            return reply.code(500).send({ error: "Internal server error" });
+            return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch users");
         }
     }
 
@@ -69,17 +65,17 @@ class UserController {
             const { name, email } = request.body as { name?: string; email?: string };
 
             if (!name && !email) {
-                return reply.code(400).send({ error: "No update fields provided" });
+                return ResponseHelper.error(reply, "No update fields provided", 400, "InvalidRequest");
             }
 
             const updated = await this.userService.updateUserByUid({ uid, data: { name, email } });
-            return reply.code(200).send(updated);
+            return ResponseHelper.success(reply, updated, "User updated successfully");
         } catch (error) {
             request.log.error(error, "Error updating current user");
             if ((error as any)?.statusCode) {
-                return reply.code((error as any).statusCode).send({ error: (error as any).message });
+                return ResponseHelper.error(reply, (error as any).message, (error as any).statusCode, "UpdateFailed");
             }
-            return reply.code(500).send({ error: "Internal server error" });
+            return ResponseHelper.error(reply, "Internal server error", 500, "Failed to update user");
         }
     }
 }
