@@ -23,11 +23,8 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 const Projects = () => {
   useDocumentTitle("Projects");
   const { user: currentUser } = useAuth();
-  const projectsQuery = useAllProjects();
-  const projects = projectsQuery.data?.pages.flatMap(page => page.data) ?? [];
-  const isLoading = projectsQuery.isLoading;
-  const error = projectsQuery.error;
-  const refetch = projectsQuery.refetch;
+  const { error, fetchNextPage, isFetchingNextPage, isLoading, hasNextPage, data, refetch } = useAllProjects();
+  const projects = data?.pages.flatMap(page => page.data) ?? [];
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filter, setFilter] = useState<"all" | "owned">("all");
@@ -59,10 +56,10 @@ const Projects = () => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
     if (
       scrollTop + clientHeight >= scrollHeight - 100 &&
-      projectsQuery.hasNextPage &&
-      !projectsQuery.isFetchingNextPage
+      hasNextPage &&
+      !isFetchingNextPage
     ) {
-      projectsQuery.fetchNextPage();
+      fetchNextPage();
     }
   };
 
@@ -202,7 +199,12 @@ const Projects = () => {
         </div>
 
         {filteredProjects.length > 0 ? (
-          <div className="flex-1 overflow-y-auto overflow-x-hidden w-full" onScroll={handleScroll}>
+          <div
+            className="flex-1 overflow-y-auto overflow-x-hidden w-full scroll-smooth"
+            onScroll={handleScroll}
+            role="main"
+            aria-label="Projects list"
+          >
             <motion.div
               layout
               id="projects-content"
@@ -210,14 +212,38 @@ const Projects = () => {
               aria-label={`${filteredProjects.length} projects in ${viewMode} view`}
               className={
                 viewMode === "grid"
-                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 h-full"
-                  : "space-y-4"
+                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-1"
+                  : "space-y-4 p-1"
               }
             >
               {filteredProjects.map((project: Project) => (
                 <ProjectCard key={project.id} project={project} />
               ))}
             </motion.div>
+            {isFetchingNextPage && (
+              <div
+                className="flex items-center justify-center py-8 px-4"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading more projects"
+              >
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm text-muted-foreground">Loading more projects...</p>
+                </div>
+              </div>
+            )}
+            {!hasNextPage && filteredProjects.length > 20 && (
+              <div
+                className="flex items-center justify-center py-6 px-4"
+                role="status"
+                aria-live="polite"
+              >
+                <p className="text-sm text-muted-foreground">
+                  You've reached the end of the list
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <div
