@@ -1,10 +1,14 @@
 import { type RouteHandler } from "fastify";
 import type UserService from "../services/user.service.js";
 import { ResponseHelper } from "../utils/response.js";
+import type ProjectsService from "../services/projects.service.js";
+import type TasksService from "../services/tasks.service.js";
 
 class UserController {
     constructor(
         private userService: UserService,
+        private projectsService: ProjectsService,
+        private tasksService: TasksService
     ) { }
 
     get: RouteHandler = async (request, reply) => {
@@ -85,6 +89,27 @@ class UserController {
                 return ResponseHelper.error(reply, (error as any).message, (error as any).statusCode, "UpdateFailed");
             }
             return ResponseHelper.error(reply, "Internal server error", 500, "Failed to update user");
+        }
+    }
+
+    getUserStats: RouteHandler = async (request, reply) => {
+        try {
+            const uid = request.user.sub;
+            const projectStats = await this.projectsService.getActiveProjectsCount({ uid });
+            const taskStats = await this.tasksService.getUserTaskStats({ uid });
+
+            const stats = {
+                ...taskStats,
+                ...projectStats
+            }
+
+            return ResponseHelper.success(reply, stats, "User stats retrieved successfully");
+        } catch (error) {
+            request.log.error(error, "Error fetching user stats");
+            if ((error as any)?.statusCode) {
+                return ResponseHelper.error(reply, (error as any).message, (error as any).statusCode, "Failed to fetch user stats");
+            }
+            return ResponseHelper.error(reply, "Internal server error", 500, "Failed to fetch user stats");
         }
     }
 }

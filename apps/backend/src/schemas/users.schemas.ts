@@ -102,6 +102,15 @@ export const UserResponseSchemas = {
     }, {
         description: 'List of users with pagination',
     }),
+
+    UserStats: Type.Object({
+        activeProjects: Type.Number({ minimum: 0 }),
+        myTasks: Type.Number({ minimum: 0 }),
+        overdueTasks: Type.Number({ minimum: 0 }),
+        completedTasks: Type.Number({ minimum: 0 }),
+    }, {
+        description: 'User stats for projects and tasks',
+    }),
 };
 
 // Route schemas with full OpenAPI documentation
@@ -225,6 +234,17 @@ export const UserRouteSchemas = {
         },
     },
 
+    GetUserStats: {
+        description: "Get user stats",
+        tags: ["users", "projects", "tasks"],
+        summary: "Get user stats for projects and tasks",
+        security: [{ bearerAuth: [] }],
+        response: {
+            200: createSuccessResponse(UserResponseSchemas.UserStats, "User stats retrieved successfully"),
+            401: BaseSchemas.Error,
+            500: BaseSchemas.Error,
+        },
+    }
 };
 
 // TypeScript types

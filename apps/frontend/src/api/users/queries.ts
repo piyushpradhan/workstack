@@ -1,7 +1,7 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { stateKeys } from "@/state";
 
-import { getAllProjectUsers } from "@/api/users";
+import { getAllProjectUsers, getUserStats } from "@/api/users";
 import { useProjects } from "../projects/queries";
 
 export const userKeys = {
@@ -10,6 +10,7 @@ export const userKeys = {
   detail: stateKeys.users.detail,
   byProject: stateKeys.users.byProject,
   byStatus: stateKeys.users.byStatus,
+  stats: stateKeys.users.stats
 } as const;
 
 export const useUsersByProjects = (projectIds: string[], limit: number = 10) => {
@@ -25,6 +26,15 @@ export const useUsersByProjects = (projectIds: string[], limit: number = 10) => 
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
 };
+
+export const useUserStats = () => {
+  return useQuery({
+    queryKey: [userKeys.stats],
+    queryFn: () => getUserStats(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+}
 
 export const useUsers = () => {
   const { allProjects } = useProjects();

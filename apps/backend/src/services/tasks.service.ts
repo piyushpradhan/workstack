@@ -1,8 +1,94 @@
-import { type PrismaClient } from "@prisma/client";
+import { TaskStatus, type PrismaClient } from "@prisma/client";
 import { CacheService } from "../utils/cache.js";
 
 class TasksService {
   constructor(private task: PrismaClient["task"], private cache: CacheService) { }
+
+  getUserTaskStats = async ({ uid }: { uid: string }) => {
+    try {
+      return await this.cache.getOrSet(`tasks:stats:${uid}`, async () => {
+        const myTaskCount = await this.task.count({
+          where: {
+            OR: [
+              {
+                owners: {
+                  some: {
+                    userId: uid
+                  }
+                }
+              },
+              {
+                members: {
+                  some: {
+                    userId: uid
+                  }
+                }
+              }
+            ]
+          }
+        });
+
+        const overdueTaskCount = await this.task.count({
+          where: {
+            status: {
+              in: [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW]
+            },
+            dueDate: {
+              lt: new Date()
+            },
+            OR: [
+              {
+                owners: {
+                  some: {
+                    userId: uid
+                  }
+                }
+              },
+              {
+                members: {
+                  some: {
+                    userId: uid
+                  }
+                }
+              }
+            ]
+          },
+        });
+
+        const completedTaskCount = await this.task.count({
+          where: {
+            status: {
+              in: ["DONE", "CANCELLED"]
+            },
+            OR: [
+              {
+                owners: {
+                  some: {
+                    userId: uid
+                  }
+                }
+              },
+              {
+                members: {
+                  some: {
+                    userId: uid
+                  }
+                }
+              }
+            ]
+          }
+        });
+
+        return {
+          myTasks: myTaskCount,
+          overdueTasks: overdueTaskCount,
+          completedTasks: completedTaskCount
+        };
+      })
+    } catch (error) {
+      throw error;
+    }
+  }
 
   getAllUsersTasks = async ({ userId, limit, cursor }: { userId: string; limit: number; cursor?: string }) => {
     try {

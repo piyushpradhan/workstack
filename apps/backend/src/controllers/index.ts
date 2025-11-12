@@ -23,6 +23,6 @@ export default fp(async (fastify) => {
     auth: new AuthController(user, token, session),
     projects: new ProjectsController(projects),
     tasks: new TasksController(tasks),
-    users: new UserController(user),
+    users: new UserController(user, projects, tasks),
   });
 });

@@ -19,6 +19,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { isTemporaryId } from "@/lib/utils";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useUserStats } from "@/api/users/queries";
 
 const Dashboard = () => {
   useDocumentTitle("Dashboard");
@@ -39,6 +40,7 @@ const Dashboard = () => {
     ownedTasksError: tasksError,
   } = useTasks();
   const taskStats = useTaskStats();
+  const userStats = useUserStats();
 
   if (authLoading) {
     return (
@@ -127,8 +129,6 @@ const Dashboard = () => {
   }
 
   const myTasks = ownedTasks;
-  const overdueTasks = taskStats.overdue;
-  const completedTasks = taskStats.completed;
   const recentTasks = [...myTasks]
     .sort(
       (a, b) =>
@@ -139,28 +139,28 @@ const Dashboard = () => {
   const stats = [
     {
       label: "Active Projects",
-      value: projects.length,
+      value: userStats.data?.activeProjects ?? 0,
       icon: FolderKanban,
       color: "indigo-500",
       link: "/projects",
     },
     {
       label: "My Tasks",
-      value: myTasks.length,
+      value: userStats.data?.myTasks ?? 0,
       icon: CheckSquare,
       color: "primary",
       link: "/tasks",
     },
     {
-      label: "Overdue",
-      value: overdueTasks,
+      label: "Overdue Tasks",
+      value: userStats.data?.overdueTasks ?? 0,
       icon: AlertCircle,
       color: "destructive",
       link: "/tasks",
     },
     {
-      label: "Completed",
-      value: completedTasks,
+      label: "Completed Tasks",
+      value: userStats.data?.completedTasks ?? 0,
       icon: TrendingUp,
       color: "primary",
       link: "/tasks",

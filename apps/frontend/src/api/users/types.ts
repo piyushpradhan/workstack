@@ -14,6 +14,13 @@ export interface User {
   passwordResetExpires: Date | null;
 }
 
+export interface UserStats {
+  activeProjects: number;
+  myTasks: number;
+  overdueTasks: number;
+  completedTasks: number;
+}
+
 export type UserRole = "ADMIN" | "MANAGER" | "MEMBER" | "VIEWER";
 
 // Note: This type is kept for backward compatibility

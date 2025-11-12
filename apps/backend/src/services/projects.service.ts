@@ -4,9 +4,44 @@ import { CacheService } from "../utils/cache.js";
 class ProjectsService {
   constructor(private project: PrismaClient["project"], private cache: CacheService) { }
 
+  getActiveProjectsCount = async ({ uid }: { uid: string }) => {
+    try {
+      return await this.cache.getOrSet(`projects:stats:${uid}`, async () => {
+        const projects = await this.project.findMany({
+          where: {
+            OR: [
+              {
+                owners: {
+                  some: {
+                    userId: uid
+                  }
+                }
+              },
+              {
+                members: {
+                  some: {
+                    userId: uid
+                  }
+                }
+              }
+            ],
+            status: {
+              in: ["ACTIVE", "ON_HOLD", "PLANNING"]
+            }
+          }
+        });
+
+        return {
+          activeProjects: projects.length
+        };
+      }, { ttl: 3600, namespace: "projects" });
+    } catch (error) {
+
+    }
+  }
+
   getAllUsersProjects = async ({ userId, limit, cursor }: { userId: string; limit: number; cursor?: string }) => {
     try {
-      // Don't cache paginated results - each cursor represents a different page
       const projects = await this.project.findMany({
         take: limit + 1, // Fetch one extra to determine if there's a next page
         skip: cursor ? 1 : 0,
@@ -115,6 +150,7 @@ class ProjectsService {
       await this.cache.invalidateCache([
         `projects:${ownerId}`,
         `projects:owned:${ownerId}`,
+        `projects:count:active:${ownerId}`,
       ], { namespace: 'projects' });
 
       return createdProject;
@@ -244,7 +280,7 @@ class ProjectsService {
 
       // Invalidate caches for all owners and members
       allUserIds.forEach(userId => {
-        keysToInvalidate.push(`projects:${userId}`, `projects:owned:${userId}`);
+        keysToInvalidate.push(`projects:${userId}`, `projects:owned:${userId}`, `projects:count:active:${userId}`);
       });
 
       await this.cache.invalidateCache(keysToInvalidate, { namespace: 'projects' });
@@ -297,7 +333,7 @@ class ProjectsService {
 
       // Invalidate caches for all owners and members
       allUserIds.forEach(userId => {
-        keysToInvalidate.push(`projects:${userId}`, `projects:owned:${userId}`);
+        keysToInvalidate.push(`projects:${userId}`, `projects:owned:${userId}`, `projects:count:active:${userId}`);
       });
 
       await this.cache.invalidateCache(keysToInvalidate, { namespace: 'projects' });

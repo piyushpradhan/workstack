@@ -68,6 +68,7 @@ export const stateKeys = {
     detail: (id: string) => ["users", "detail", id] as const,
     byProject: (projectId: string) => ["users", "project", projectId] as const,
     byStatus: (status: string) => ["users", "status", status] as const,
+    stats: () => ["users", "stats"] as const,
   } as const,
 } as const;
 
