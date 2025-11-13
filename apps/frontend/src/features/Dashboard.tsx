@@ -12,7 +12,7 @@ import { motion } from "motion/react";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { useAuth } from "@/api/auth/queries";
 import { useAllProjects } from "@/api/projects/queries";
-import { useTasks, useTaskStats } from "@/api/tasks/queries";
+import { useTasks } from "@/api/tasks/queries";
 import { TaskModal } from "@/components/tasks/TaskModal";
 import { ProjectModal } from "@/components/projects/ProjectModal";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -30,7 +30,6 @@ const Dashboard = () => {
     error: authError,
   } = useAuth();
   const projectsQuery = useAllProjects();
-  const projects = projectsQuery.data?.pages.flatMap(page => page.data) ?? [];
   const projectsLoading = projectsQuery.isLoading;
   const projectsError = projectsQuery.error;
   const refetchProjects = projectsQuery.refetch;
@@ -39,7 +38,6 @@ const Dashboard = () => {
     isLoading: tasksLoading,
     ownedTasksError: tasksError,
   } = useTasks();
-  const taskStats = useTaskStats();
   const userStats = useUserStats();
 
   if (authLoading) {

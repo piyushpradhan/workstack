@@ -1,6 +1,6 @@
 import apiClient from "@/api/axios";
 import type { User, UserStats } from "@/api/users/types";
-import type { ApiResponse, CursorPaginatedResponse } from "@/api/types";
+import type { CursorPaginatedResponse } from "@/api/types";
 
 // Get users by project IDs with cursor pagination
 export const getAllProjectUsers = async (
