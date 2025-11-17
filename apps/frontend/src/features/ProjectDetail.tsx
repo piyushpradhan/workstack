@@ -16,7 +16,7 @@ import { motion } from "motion/react";
 import { useAllProjects } from "@/api/projects/queries";
 import { useAuth } from "@/api/auth/queries";
 import { useTasksByProject } from "@/api/tasks/queries";
-import { useUsers } from "@/api/users/queries";
+import { useUsersByProjects } from "@/api/users/queries";
 import type { Task } from "@/state";
 import { isTemporaryId } from "@/lib/utils";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -28,7 +28,8 @@ const ProjectDetail = () => {
   const projects = projectsQuery.data?.pages.flatMap(page => page.data) ?? [];
   const projectTasksQuery = useTasksByProject(id || "");
   const projectTasks = projectTasksQuery.data?.pages.flatMap(page => page.data) ?? [];
-  const { allProjectUsers } = useUsers();
+  const { data: usersData } = useUsersByProjects(id ? [id] : [], 100);
+  const allProjectUsers = usersData?.pages.flatMap(page => page.data) ?? [];
   const { user: currentUser } = useAuth();
 
   useEffect(() => {

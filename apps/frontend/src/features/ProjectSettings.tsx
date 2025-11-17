@@ -24,7 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Trash2, Save, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { useProject, useUpdateProject, useDeleteProject } from "@/api/projects/queries";
-import { useUsers } from "@/api/users/queries";
+import { useUsersByProjects } from "@/api/users/queries";
 import { useAuth } from "@/api/auth/queries";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { isTemporaryId } from "@/lib/utils";
@@ -35,7 +35,8 @@ const ProjectSettings = () => {
     const { data: project, isLoading: isLoadingProject } = useProject(id || "");
     const { updateProject, isUpdating } = useUpdateProject();
     const { deleteProject, isDeleting } = useDeleteProject();
-    const { allProjectUsers: users } = useUsers();
+    const { data: usersData } = useUsersByProjects(id ? [id] : [], 100);
+    const users = usersData?.pages.flatMap(page => page.data) ?? [];
     const { user: currentUser } = useAuth();
 
     const [name, setName] = useState("");

@@ -235,7 +235,7 @@ export const ProjectRouteSchemas = {
         }),
         body: ProjectRequestSchemas.UpdateProject,
         response: {
-            200: createSuccessResponse(ProjectSchemas.Project, 'Project updated successfully'),
+            200: createSuccessResponse(ProjectSchemas.ProjectWithUsers, 'Project updated successfully'),
             400: BaseSchemas.Error,
             401: BaseSchemas.Error,
             403: BaseSchemas.Error,

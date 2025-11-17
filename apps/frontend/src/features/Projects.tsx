@@ -12,12 +12,10 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useAuth } from "@/api/auth/queries";
 import { useAllProjects } from "@/api/projects/queries";
 import type { Project } from "@/api/projects/types";
 import { useModal } from "@/contexts/ModalContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { useErrorHandler } from "@/components/ErrorBoundary";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { ProjectsFilters } from "./Projects/ProjectsFilters";
 
@@ -25,7 +23,6 @@ type ProjectStatus = "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLE
 
 const Projects = () => {
   useDocumentTitle("Projects");
-  const { user: currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedStatuses, setSelectedStatuses] = useState<ProjectStatus[]>([]);
@@ -49,7 +46,6 @@ const Projects = () => {
   const { error, fetchNextPage, isFetchingNextPage, isLoading, hasNextPage, data, refetch } = useAllProjects(21, apiFilters);
   const projects = data?.pages.flatMap(page => page.data) ?? [];
   const { openModal } = useModal();
-  const { handleError } = useErrorHandler();
 
   const hasActiveFilters = useMemo(
     () => selectedStatuses.length > 0,

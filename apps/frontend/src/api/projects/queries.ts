@@ -69,7 +69,7 @@ export const useCreateProject = () => {
 export const useUpdateProject = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateProjectRequest }) =>
       updateProject(id, data),
     onSuccess: (updatedProject: Project) => {
@@ -81,17 +81,27 @@ export const useUpdateProject = () => {
 
       // Invalidate lists to ensure they reflect the changes
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+
+      // Refetch the project to ensure we have the latest data with all relations
+      queryClient.invalidateQueries({ queryKey: projectKeys.detail(updatedProject.id) });
     },
     onError: (error: Error) => {
       console.error("Error updating project:", error.message);
     },
   });
+
+  return {
+    updateProject: mutation.mutate,
+    updateProjectAsync: mutation.mutateAsync,
+    isUpdating: mutation.isPending,
+    error: mutation.error,
+  };
 };
 
 export const useDeleteProject = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: deleteProject,
     onSuccess: (_, deletedProjectId) => {
       // Remove the project from cache
@@ -106,6 +116,13 @@ export const useDeleteProject = () => {
       console.error("Error deleting project:", error.message);
     },
   });
+
+  return {
+    deleteProject: mutation.mutate,
+    deleteProjectAsync: mutation.mutateAsync,
+    isDeleting: mutation.isPending,
+    error: mutation.error,
+  };
 };
 
 export const useProjects = () => {
@@ -136,18 +153,18 @@ export const useProjects = () => {
 
     // Mutation functions
     createProject: createMutation.mutate,
-    updateProject: updateMutation.mutate,
-    deleteProject: deleteMutation.mutate,
+    updateProject: updateMutation.updateProject,
+    deleteProject: deleteMutation.deleteProject,
 
     // Async mutation functions
     createProjectAsync: createMutation.mutateAsync,
-    updateProjectAsync: updateMutation.mutateAsync,
-    deleteProjectAsync: deleteMutation.mutateAsync,
+    updateProjectAsync: updateMutation.updateProjectAsync,
+    deleteProjectAsync: deleteMutation.deleteProjectAsync,
 
     // Mutation states
     isCreating: createMutation.isPending,
-    isUpdating: updateMutation.isPending,
-    isDeleting: deleteMutation.isPending,
+    isUpdating: updateMutation.isUpdating,
+    isDeleting: deleteMutation.isDeleting,
 
     // Mutation errors
     createError: createMutation.error,

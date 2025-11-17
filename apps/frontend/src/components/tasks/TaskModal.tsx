@@ -14,7 +14,7 @@ import { useAuth } from "@/api/auth/queries";
 import { useAllProjects } from "@/api/projects/queries";
 import { useCreateTask } from "@/api/tasks/queries";
 import type { TaskStatus, TaskPriority } from "@/state/tasks/types";
-import { useUsers } from "@/api/users/queries";
+import { useUsersByProjects } from "@/api/users/queries";
 import type { User } from "@/api/users/types";
 import { SelectField } from "./TaskOptionSelect";
 import { useModal } from "@/contexts/ModalContext";
@@ -24,7 +24,6 @@ export function TaskModal() {
   const { user: currentUser } = useAuth();
   const projectsQuery = useAllProjects();
   const projects = projectsQuery.data?.pages.flatMap(page => page.data) ?? [];
-  const { allProjectUsers } = useUsers();
   const createTaskMutation = useCreateTask();
 
   const [title, setTitle] = useState("");
@@ -32,6 +31,9 @@ export function TaskModal() {
   const [status, setStatus] = useState<TaskStatus>("TODO");
   const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
   const [projectId, setProjectId] = useState("");
+
+  const { data: usersData } = useUsersByProjects(projectId ? [projectId] : [], 100);
+  const allProjectUsers = usersData?.pages.flatMap(page => page.data) ?? [];
   const [ownerId, setOwnerId] = useState("");
   const [dueDate, setDueDate] = useState("");
 

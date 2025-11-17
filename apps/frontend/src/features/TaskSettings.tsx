@@ -24,7 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Trash2, Save, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { useTask, useUpdateTask, useDeleteTask } from "@/api/tasks/queries";
-import { useUsers } from "@/api/users/queries";
+import { useUsersByProjects } from "@/api/users/queries";
 import { useAuth } from "@/api/auth/queries";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { isTemporaryId } from "@/lib/utils";
@@ -34,9 +34,10 @@ const TaskSettings = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { data: task, isLoading: isLoadingTask } = useTask(id || "");
-    const { updateTask, isUpdating } = useUpdateTask();
-    const { deleteTask, isDeleting } = useDeleteTask();
-    const { allProjectUsers: users } = useUsers();
+    const updateTaskMutation = useUpdateTask();
+    const deleteTaskMutation = useDeleteTask();
+    const { data: usersData } = useUsersByProjects(task?.projectId ? [task.projectId] : [], 100);
+    const users = usersData?.pages.flatMap(page => page.data) ?? [];
     const { user: currentUser } = useAuth();
 
     const [title, setTitle] = useState("");
@@ -168,7 +169,7 @@ const TaskSettings = () => {
             return;
         }
 
-        updateTask(
+        updateTaskMutation.mutate(
             { id: task.id, data: updateData },
             {
                 onSuccess: () => {
@@ -183,16 +184,16 @@ const TaskSettings = () => {
     };
 
     const handleDelete = () => {
-        deleteTask(task.id, {
+        deleteTaskMutation.mutate(task.id, {
             onSuccess: () => {
                 toast.success("Task deleted successfully");
                 navigate("/tasks");
             },
             onError: (error: Error) => {
                 toast.error(`Failed to delete task: ${error.message}`);
-                setShowDeleteDialog(false);
             },
-        });
+        }
+        );
     };
 
     const toggleOwner = (userId: string) => {
@@ -375,11 +376,11 @@ const TaskSettings = () => {
                         <div className="space-y-3">
                             <Button
                                 onClick={handleSave}
-                                disabled={isUpdating}
+                                disabled={updateTaskMutation.isPending}
                                 className="w-full gap-2"
                             >
                                 <Save className="w-4 h-4" />
-                                {isUpdating ? "Saving..." : "Save Changes"}
+                                {updateTaskMutation.isPending ? "Saving..." : "Save Changes"}
                             </Button>
 
                             <Button
@@ -404,7 +405,7 @@ const TaskSettings = () => {
                                 <Button
                                     variant="destructive"
                                     onClick={() => setShowDeleteDialog(true)}
-                                    disabled={isDeleting}
+                                    disabled={deleteTaskMutation.isPending}
                                     className="w-full gap-2"
                                 >
                                     <Trash2 className="w-4 h-4" />
@@ -428,16 +429,16 @@ const TaskSettings = () => {
                         <Button
                             variant="outline"
                             onClick={() => setShowDeleteDialog(false)}
-                            disabled={isDeleting}
+                            disabled={deleteTaskMutation.isPending}
                         >
                             Cancel
                         </Button>
                         <Button
                             variant="destructive"
                             onClick={handleDelete}
-                            disabled={isDeleting}
+                            disabled={deleteTaskMutation.isPending}
                         >
-                            {isDeleting ? "Deleting..." : "Delete Task"}
+                            {deleteTaskMutation.isPending ? "Deleting..." : "Delete Task"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

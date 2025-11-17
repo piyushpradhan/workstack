@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { KanbanBoard } from "@/components/tasks/KanbanBoard";
 import { TaskModal } from "@/components/tasks/TaskModal";
-import { useUsers } from "@/api/users/queries";
+import { useUsersByProjects } from "@/api/users/queries";
 import { useAllTasks } from "@/api/tasks/queries";
 import { useAllProjects } from "@/api/projects/queries";
 import type { TaskPriority, TaskStatus } from "@/state";
@@ -28,9 +28,16 @@ const initialFilters: TaskFiltersState = {
 const Tasks = () => {
   useDocumentTitle("Tasks");
   const allProjectsQuery = useAllProjects();
-  const { allProjectUsers: users } = useUsers();
+  const projects = allProjectsQuery.data?.pages.flatMap(page => page.data) ?? [];
   const [isModalOpen, _setIsModalOpen] = useState(false);
   const [filters, setFilters] = useState<TaskFiltersState>(initialFilters);
+
+  // Only fetch users from filtered projects if projects are filtered, otherwise fetch from all projects
+  const projectIdsForUsers = filters.projects.length > 0
+    ? filters.projects
+    : projects.map(p => p.id);
+  const { data: usersData } = useUsersByProjects(projectIdsForUsers, 100);
+  const users = usersData?.pages.flatMap(page => page.data) ?? [];
 
   const apiFilters = useMemo(() => {
     const result: {
@@ -62,7 +69,6 @@ const Tasks = () => {
 
   const allTasksQuery = useAllTasks(50, apiFilters);
   const tasks = allTasksQuery.data?.pages.flatMap(page => page.data) ?? [];
-  const projects = allProjectsQuery.data?.pages.flatMap(page => page.data) ?? [];
 
   const hasActiveFilters = useMemo(
     () =>

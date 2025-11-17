@@ -4,14 +4,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useTask, useUpdateTask } from "@/api/tasks/queries";
 import { useAllProjects } from "@/api/projects/queries";
-import { useUsers } from "@/api/users/queries";
+import { useUsersByProjects } from "@/api/users/queries";
 import type { TaskPriority, TaskStatus } from "@/state";
-import { TaskDetailHeader } from "./TaskDetailHeader";
-import { TaskDescription } from "./TaskDescription";
-import { TaskComments } from "./TaskComments";
-import { TaskPropertiesCard } from "./TaskPropertiesCard";
-import { TaskMetadataCard } from "./TaskMetadataCard";
-import { TaskParticipantsCard } from "./TaskParticipantsCard";
+import { TaskDetailHeader } from "@/features/TaskDetail/TaskDetailHeader";
+import { TaskDescription } from "@/features/TaskDetail/TaskDescription";
+import { TaskComments } from "@/features/TaskDetail/TaskComments";
+import { TaskPropertiesCard } from "@/features/TaskDetail/TaskPropertiesCard";
+import { TaskMetadataCard } from "@/features/TaskDetail/TaskMetadataCard";
+import { TaskParticipantsCard } from "@/features/TaskDetail/TaskParticipantsCard";
 import { isTemporaryId } from "@/lib/utils";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
@@ -24,7 +24,8 @@ const TaskDetail = () => {
 
   const projectsQuery = useAllProjects();
   const projects = projectsQuery.data?.pages.flatMap(page => page.data) ?? [];
-  const { allProjectUsers } = useUsers();
+  const { data: usersData } = useUsersByProjects(task?.projectId ? [task.projectId] : [], 100);
+  const allProjectUsers = usersData?.pages.flatMap(page => page.data) ?? [];
 
   const project = useMemo(
     () => projects.find((p) => p.id === task?.projectId) ?? null,
@@ -176,7 +177,7 @@ const TaskDetail = () => {
           title={task?.title ?? "Untitled task"}
           status={task?.status}
           priority={task?.priority}
-          dueDate={task?.dueDate}
+          dueDate={task?.dueDate ?? undefined}
           isOverdue={Boolean(isOverdue)}
           onBack={() => navigate(-1)}
           onShare={handleShareLink}
@@ -187,7 +188,7 @@ const TaskDetail = () => {
           {/* Main: Description + Comments */}
           <div className="lg:col-span-2 space-y-6">
             <TaskDescription
-              description={task?.description}
+              description={task?.description ?? ""}
               onChange={handleDescriptionChange}
             />
             <TaskComments
@@ -223,7 +224,7 @@ const TaskDetail = () => {
               onStatusChange={(v) => handleStatusChange(v as TaskStatus)}
               priority={task?.priority}
               onPriorityChange={(v) => handlePriorityChange(v as TaskPriority)}
-              dueDate={task?.dueDate}
+              dueDate={task?.dueDate ?? undefined}
               onDueDateChange={handleDueDateChange}
               isOverdue={Boolean(isOverdue)}
               isDueSoon={Boolean(isDueSoon)}

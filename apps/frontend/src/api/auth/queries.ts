@@ -11,7 +11,6 @@ import type { LoginRequest, RegisterRequest } from "./types";
 import type { User } from "@/api/users/types";
 import { AuthError } from "@/api/auth/errorHandler";
 import { stateKeys } from "@/state/utils";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export const authKeys = {
   all: stateKeys.auth.all,
