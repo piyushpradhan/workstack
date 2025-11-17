@@ -15,7 +15,7 @@ const Layout = () => {
       />
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopNav onMobileMenuClick={() => setIsMobileSidebarOpen(true)} />
-        <main className="flex-1 overflow-hidden">
+        <main className="flex-1 overflow-auto">
           <Outlet />
         </main>
       </div>

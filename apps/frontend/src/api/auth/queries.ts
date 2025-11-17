@@ -11,6 +11,7 @@ import type { LoginRequest, RegisterRequest } from "./types";
 import type { User } from "@/api/users/types";
 import { AuthError } from "@/api/auth/errorHandler";
 import { stateKeys } from "@/state/utils";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export const authKeys = {
   all: stateKeys.auth.all,
@@ -63,11 +64,11 @@ export const useLogin = () => {
         throw error;
       }
     },
-    onSuccess: (user) => {
+    onSuccess: async (user) => {
       queryClient.setQueryData(authKeys.user(), user);
     },
     onError: (error: AuthError) => {
-      console.error("Login failed:", error.message);
+      throw error;
     },
   });
 };

@@ -89,8 +89,18 @@ class ApiClient {
       async (error: any) => {
         const originalRequest = error.config;
 
-        // Handle 401 errors with token refresh
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Skip refresh for auth endpoints - they shouldn't trigger token refresh
+        const authEndpoints = ["/auth/login", "/auth/register", "/auth/refresh"];
+        const requestUrl = originalRequest?.url || "";
+        const isAuthEndpoint = authEndpoints.some((endpoint) =>
+          requestUrl.includes(endpoint),
+        );
+
+        if (
+          error.response?.status === 401 &&
+          !originalRequest._retry &&
+          !isAuthEndpoint
+        ) {
           if (this.isRefreshing) {
             // If already refreshing, queue this request
             return new Promise((resolve, reject) => {

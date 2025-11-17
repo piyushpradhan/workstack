@@ -294,7 +294,31 @@ class TasksService {
         `tasks:project:${projectId}`,
       ], { namespace: 'tasks' });
 
-      return createdTask;
+      const newTask = await this.task.findFirst({
+        where: {
+          id: createdTask.id
+        },
+        include: {
+          project: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          owners: {
+            include: {
+              user: true
+            }
+          },
+          members: {
+            include: {
+              user: true
+            }
+          }
+        }
+      });
+
+      return newTask;
     } catch (error) {
       throw error;
     }

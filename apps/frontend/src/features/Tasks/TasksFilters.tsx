@@ -66,12 +66,12 @@ export function TasksFilters({
   return (
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4">
       <div className="relative flex-1 sm:max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b7280]" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" />
         <Input
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search tasks..."
-          className="bg-[#161b22] border-[#21262d] text-white placeholder:text-[#6b7280] pl-10"
+          className="pl-10"
         />
       </div>
 
@@ -79,12 +79,12 @@ export function TasksFilters({
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className="gap-2 bg-[#161b22] border-[#21262d] text-white hover:bg-[#21262d] flex-shrink-0 w-full sm:w-auto"
+            className="gap-2 border-border hover:bg-accent flex-shrink-0 w-full sm:w-auto cursor-pointer"
           >
             <SlidersHorizontal className="w-4 h-4" />
             <span className="hidden sm:inline">Filters</span>
             {hasActiveFilters && (
-              <span className="ml-1 px-1.5 py-0.5 bg-[#0969da] text-white rounded-full text-xs">
+              <span className="ml-1 px-1.5 py-0.5 bg-primary text-primary-foreground rounded-full text-xs">
                 {selectedProjects.length +
                   selectedStatuses.length +
                   selectedPriorities.length +
@@ -95,9 +95,9 @@ export function TasksFilters({
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="w-64 bg-[#161b22] border-[#21262d] max-h-[80vh] overflow-y-auto"
+          className="w-64 max-h-[80vh] overflow-y-auto"
         >
-          <DropdownMenuLabel className="text-white">
+          <DropdownMenuLabel>
             Filter by Project
           </DropdownMenuLabel>
           {projects?.map((project) => (
@@ -107,14 +107,13 @@ export function TasksFilters({
               onCheckedChange={() =>
                 toggleFilter(project.id, selectedProjects, setSelectedProjects)
               }
-              className="text-white hover:bg-[#21262d]"
             >
               {project.name}
             </DropdownMenuCheckboxItem>
           ))}
 
-          <DropdownMenuSeparator className="bg-[#21262d]" />
-          <DropdownMenuLabel className="text-white">
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>
             Filter by Status
           </DropdownMenuLabel>
           {(
@@ -132,14 +131,13 @@ export function TasksFilters({
               onCheckedChange={() =>
                 toggleFilter(status, selectedStatuses, setSelectedStatuses)
               }
-              className="text-white hover:bg-[#21262d]"
             >
               {status.replace("_", " ")}
             </DropdownMenuCheckboxItem>
           ))}
 
-          <DropdownMenuSeparator className="bg-[#21262d]" />
-          <DropdownMenuLabel className="text-white">
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>
             Filter by Priority
           </DropdownMenuLabel>
           {(["LOW", "MEDIUM", "HIGH", "URGENT"] as TaskPriority[]).map(
@@ -154,15 +152,14 @@ export function TasksFilters({
                     setSelectedPriorities,
                   )
                 }
-                className="text-white hover:bg-[#21262d]"
               >
                 {priority}
               </DropdownMenuCheckboxItem>
             ),
           )}
 
-          <DropdownMenuSeparator className="bg-[#21262d]" />
-          <DropdownMenuLabel className="text-white">
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>
             Filter by Assignee
           </DropdownMenuLabel>
           {users?.map((user) => (
@@ -172,7 +169,6 @@ export function TasksFilters({
               onCheckedChange={() =>
                 toggleFilter(user.id, selectedAssignees, setSelectedAssignees)
               }
-              className="text-white hover:bg-[#21262d]"
             >
               {user.name}
             </DropdownMenuCheckboxItem>
@@ -180,10 +176,10 @@ export function TasksFilters({
 
           {hasActiveFilters && (
             <>
-              <DropdownMenuSeparator className="bg-[#21262d]" />
+              <DropdownMenuSeparator />
               <button
                 onClick={clearFilters}
-                className="w-full px-2 py-1.5 text-[#0969da] hover:bg-[#21262d] rounded"
+                className="w-full px-2 py-1.5 rounded"
               >
                 Clear all filters
               </button>

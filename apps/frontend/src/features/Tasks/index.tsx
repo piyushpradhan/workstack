@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { KanbanBoard } from "@/components/tasks/KanbanBoard";
 import { TaskModal } from "@/components/tasks/TaskModal";
 import { useUsers } from "@/api/users/queries";
@@ -9,80 +9,101 @@ import { TasksHeader } from "@/features/Tasks/TasksHeader";
 import { TasksFilters } from "@/features/Tasks/TasksFilters";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
+interface TaskFiltersState {
+  searchQuery: string;
+  projects: string[];
+  statuses: TaskStatus[];
+  priorities: TaskPriority[];
+  assignees: string[];
+}
+
+const initialFilters: TaskFiltersState = {
+  searchQuery: "",
+  projects: [],
+  statuses: [],
+  priorities: [],
+  assignees: [],
+};
+
 export function Tasks() {
   useDocumentTitle("Tasks");
-  const allTasksQuery = useAllTasks();
   const allProjectsQuery = useAllProjects();
   const { allProjectUsers: users } = useUsers();
+  const [isModalOpen, _setIsModalOpen] = useState(false);
+  const [filters, setFilters] = useState<TaskFiltersState>(initialFilters);
 
+  // Convert UI filters to API filters format
+  const apiFilters = useMemo(() => {
+    const result: {
+      search?: string;
+      projectIds?: string[];
+      statuses?: string[];
+      priorities?: string[];
+      assigneeIds?: string[];
+    } = {};
+
+    if (filters.searchQuery.trim()) {
+      result.search = filters.searchQuery.trim();
+    }
+    if (filters.projects.length > 0) {
+      result.projectIds = filters.projects;
+    }
+    if (filters.statuses.length > 0) {
+      result.statuses = filters.statuses;
+    }
+    if (filters.priorities.length > 0) {
+      result.priorities = filters.priorities;
+    }
+    if (filters.assignees.length > 0) {
+      result.assigneeIds = filters.assignees;
+    }
+
+    return Object.keys(result).length > 0 ? result : undefined;
+  }, [filters]);
+
+  const allTasksQuery = useAllTasks(50, apiFilters);
   const tasks = allTasksQuery.data?.pages.flatMap(page => page.data) ?? [];
   const projects = allProjectsQuery.data?.pages.flatMap(page => page.data) ?? [];
-  const [isModalOpen, _setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
-  const [selectedStatuses, setSelectedStatuses] = useState<TaskStatus[]>([]);
-  const [selectedPriorities, setSelectedPriorities] = useState<TaskPriority[]>(
-    [],
+
+  const hasActiveFilters = useMemo(
+    () =>
+      filters.projects.length > 0 ||
+      filters.statuses.length > 0 ||
+      filters.priorities.length > 0 ||
+      filters.assignees.length > 0,
+    [filters]
   );
-  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
 
-  const filteredTasks = tasks?.filter((task) => {
-    const matchesSearch =
-      task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesProject =
-      selectedProjects.length === 0 ||
-      selectedProjects.includes(task.projectId);
-    const matchesStatus =
-      selectedStatuses.length === 0 || selectedStatuses.includes(task.status);
-    const matchesPriority =
-      selectedPriorities.length === 0 ||
-      selectedPriorities.includes(task.priority);
-    const matchesAssignee =
-      selectedAssignees.length === 0 ||
-      (task.ownerId && selectedAssignees.includes(task.ownerId));
-
-    return (
-      matchesSearch &&
-      matchesProject &&
-      matchesStatus &&
-      matchesPriority &&
-      matchesAssignee
-    );
-  });
-
-  const hasActiveFilters =
-    selectedProjects.length > 0 ||
-    selectedStatuses.length > 0 ||
-    selectedPriorities.length > 0 ||
-    selectedAssignees.length > 0;
+  const updateFilter = <K extends keyof TaskFiltersState>(
+    key: K,
+    value: TaskFiltersState[K]
+  ) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
 
   const clearFilters = () => {
-    setSelectedProjects([]);
-    setSelectedStatuses([]);
-    setSelectedPriorities([]);
-    setSelectedAssignees([]);
+    setFilters(initialFilters);
   };
 
   return (
     <div className="flex flex-col h-full p-4 md:p-6 space-y-4 md:space-y-6">
       <TasksHeader
-        count={filteredTasks?.length ?? 0}
+        count={tasks?.length ?? 0}
       />
 
       <TasksFilters
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+        searchQuery={filters.searchQuery}
+        onSearchChange={(value) => updateFilter("searchQuery", value)}
         projects={projects ?? []}
         users={users ?? []}
-        selectedProjects={selectedProjects}
-        setSelectedProjects={setSelectedProjects}
-        selectedStatuses={selectedStatuses}
-        setSelectedStatuses={setSelectedStatuses}
-        selectedPriorities={selectedPriorities}
-        setSelectedPriorities={setSelectedPriorities}
-        selectedAssignees={selectedAssignees}
-        setSelectedAssignees={setSelectedAssignees}
+        selectedProjects={filters.projects}
+        setSelectedProjects={(value) => updateFilter("projects", value)}
+        selectedStatuses={filters.statuses}
+        setSelectedStatuses={(value) => updateFilter("statuses", value)}
+        selectedPriorities={filters.priorities}
+        setSelectedPriorities={(value) => updateFilter("priorities", value)}
+        selectedAssignees={filters.assignees}
+        setSelectedAssignees={(value) => updateFilter("assignees", value)}
         hasActiveFilters={hasActiveFilters}
         clearFilters={clearFilters}
       />

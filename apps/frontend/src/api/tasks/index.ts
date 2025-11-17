@@ -6,14 +6,39 @@ import type {
 } from "@/api/tasks/types";
 import type { CursorPaginatedResponse } from "@/api/types";
 
+export interface TaskFilters {
+  search?: string;
+  projectIds?: string[];
+  statuses?: string[];
+  priorities?: string[];
+  assigneeIds?: string[];
+}
+
 export const getAllTasks = async (
   limit?: number,
-  cursor?: string
+  cursor?: string,
+  filters?: TaskFilters
 ): Promise<CursorPaginatedResponse<Task>> => {
   const params = new URLSearchParams();
 
   if (limit) params.append("limit", limit.toString());
   if (cursor) params.append("cursor", cursor);
+
+  if (filters) {
+    if (filters.search) params.append("search", filters.search);
+    if (filters.projectIds && filters.projectIds.length > 0) {
+      filters.projectIds.forEach(id => params.append("projectIds", id));
+    }
+    if (filters.statuses && filters.statuses.length > 0) {
+      filters.statuses.forEach(status => params.append("statuses", status));
+    }
+    if (filters.priorities && filters.priorities.length > 0) {
+      filters.priorities.forEach(priority => params.append("priorities", priority));
+    }
+    if (filters.assigneeIds && filters.assigneeIds.length > 0) {
+      filters.assigneeIds.forEach(id => params.append("assigneeIds", id));
+    }
+  }
 
   const queryString = params.toString();
 

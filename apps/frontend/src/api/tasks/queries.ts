@@ -1,6 +1,7 @@
-import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useInfiniteQuery, type InfiniteData } from "@tanstack/react-query";
 import { stateKeys } from "@/state";
 import type { UpdateTaskRequest, Task } from "@/api/tasks/types";
+import type { CursorPaginatedResponse } from "@/api/types";
 import {
   getAllTasks,
   getTaskById,
@@ -9,6 +10,7 @@ import {
   deleteTask,
   getTasksByProject,
   getOwnedTasks,
+  type TaskFilters,
 } from "@/api/tasks";
 
 export const taskKeys = {
@@ -33,10 +35,13 @@ export const taskKeys = {
   search: stateKeys.tasks.search,
 } as const;
 
-export const useAllTasks = (limit: number = 50) => {
+export const useAllTasks = (
+  limit: number = 50,
+  filters?: TaskFilters
+) => {
   return useInfiniteQuery({
-    queryKey: [...taskKeys.lists(), limit],
-    queryFn: ({ pageParam }) => getAllTasks(limit, pageParam),
+    queryKey: [...taskKeys.lists(), limit, filters],
+    queryFn: ({ pageParam }) => getAllTasks(limit, pageParam, filters),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => {
       return lastPage.meta.hasNextPage ? lastPage.cursor : undefined;
@@ -95,12 +100,14 @@ export const useCreateTask = () => {
         queryKey: taskKeys.byProject(newTaskData.projectId),
       });
       await queryClient.cancelQueries({ queryKey: taskKeys.myTasks() });
+      queryClient.invalidateQueries({ queryKey: taskKeys.byProject(newTaskData.projectId) });
 
       return {
         projectId: newTaskData.projectId,
       };
     },
     onSuccess: (newTask: Task) => {
+      console.log({ newTask, key: taskKeys.byProject(newTask.projectId) });
       // Cache the new task detail
       queryClient.setQueryData(taskKeys.detail(newTask.id), newTask);
     },
@@ -133,13 +140,13 @@ export const useUpdateTask = () => {
         queryKey: taskKeys.byProject(projectId),
       });
 
-      const previousAllTasks = queryClient.getQueryData<Task[]>(
+      const previousAllTasks = queryClient.getQueryData<InfiniteData<CursorPaginatedResponse<Task>>>(
         taskKeys.lists(),
       );
-      const previousProjectTasks = queryClient.getQueryData<Task[]>(
-        taskKeys.byProject(projectId),
-      );
-      const previousMyTasks = queryClient.getQueryData<Task[]>(
+      const previousProjectTasksQueries = queryClient.getQueriesData<InfiniteData<CursorPaginatedResponse<Task>>>({
+        queryKey: taskKeys.byProject(projectId),
+      });
+      const previousMyTasks = queryClient.getQueryData<InfiniteData<CursorPaginatedResponse<Task>>>(
         taskKeys.myTasks(),
       );
       const previousTask = currentTask;
@@ -151,29 +158,56 @@ export const useUpdateTask = () => {
       };
 
       queryClient.setQueryData<Task>(taskKeys.detail(id), optimisticTask);
-      queryClient.setQueryData<Task[]>(
+
+      // Update infinite query for allTasks
+      queryClient.setQueryData<InfiniteData<CursorPaginatedResponse<Task>>>(
         taskKeys.lists(),
-        (old) =>
-          old?.map((task) => (task.id === id ? optimisticTask : task)) ?? [],
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data?.map((task) => (task.id === id ? optimisticTask : task)) ?? [],
+            })),
+          };
+        },
       );
-      queryClient.setQueryData<Task[]>(
-        taskKeys.byProject(projectId),
-        (old) =>
-          old?.map((task) => (task.id === id ? optimisticTask : task)) ?? [],
-      );
+
+      // Update all infinite queries for byProject (handles different limit values)
+      queryClient.setQueriesData<InfiniteData<CursorPaginatedResponse<Task>>>({
+        queryKey: taskKeys.byProject(projectId),
+      }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            data: page.data?.map((task) => (task.id === id ? optimisticTask : task)) ?? [],
+          })),
+        };
+      });
 
       // Update myTasks if task is assigned to someone
       if (currentTask.ownerId) {
-        queryClient.setQueryData<Task[]>(
+        queryClient.setQueryData<InfiniteData<CursorPaginatedResponse<Task>>>(
           taskKeys.myTasks(),
-          (old) =>
-            old?.map((task) => (task.id === id ? optimisticTask : task)) ?? [],
+          (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                data: page.data?.map((task) => (task.id === id ? optimisticTask : task)) ?? [],
+              })),
+            };
+          },
         );
       }
 
       return {
         previousAllTasks,
-        previousProjectTasks,
+        previousProjectTasksQueries,
         previousMyTasks,
         projectId,
         previousTask,
@@ -184,11 +218,11 @@ export const useUpdateTask = () => {
       if (context?.previousAllTasks) {
         queryClient.setQueryData(taskKeys.lists(), context.previousAllTasks);
       }
-      if (context?.previousProjectTasks && context.projectId) {
-        queryClient.setQueryData(
-          taskKeys.byProject(context.projectId),
-          context.previousProjectTasks,
-        );
+      if (context?.previousProjectTasksQueries && context.projectId) {
+        // Restore all byProject queries
+        context.previousProjectTasksQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
       if (context?.previousMyTasks) {
         queryClient.setQueryData(taskKeys.myTasks(), context.previousMyTasks);
@@ -204,29 +238,54 @@ export const useUpdateTask = () => {
       // Replace optimistic updates with real data
       queryClient.setQueryData(taskKeys.detail(updatedTask.id), updatedTask);
 
-      // Update all lists with the real task
-      queryClient.setQueryData<Task[]>(
+      // Update infinite query for allTasks
+      queryClient.setQueryData<InfiniteData<CursorPaginatedResponse<Task>>>(
         taskKeys.lists(),
-        (old) =>
-          old?.map((task) =>
-            task.id === updatedTask.id ? updatedTask : task,
-          ) ?? [],
-      );
-      queryClient.setQueryData<Task[]>(
-        taskKeys.byProject(updatedTask.projectId),
-        (old) =>
-          old?.map((task) =>
-            task.id === updatedTask.id ? updatedTask : task,
-          ) ?? [],
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data?.map((task) =>
+                task.id === updatedTask.id ? updatedTask : task,
+              ) ?? [],
+            })),
+          };
+        },
       );
 
-      if (updatedTask.ownerId) {
-        queryClient.setQueryData<Task[]>(
-          taskKeys.myTasks(),
-          (old) =>
-            old?.map((task) =>
+      // Update all infinite queries for byProject (handles different limit values)
+      queryClient.setQueriesData<InfiniteData<CursorPaginatedResponse<Task>>>({
+        queryKey: taskKeys.byProject(updatedTask.projectId),
+      }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            data: page.data?.map((task) =>
               task.id === updatedTask.id ? updatedTask : task,
             ) ?? [],
+          })),
+        };
+      });
+
+      if (updatedTask.ownerId) {
+        queryClient.setQueryData<InfiniteData<CursorPaginatedResponse<Task>>>(
+          taskKeys.myTasks(),
+          (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                data: page.data?.map((task) =>
+                  task.id === updatedTask.id ? updatedTask : task,
+                ) ?? [],
+              })),
+            };
+          },
         );
       }
     },

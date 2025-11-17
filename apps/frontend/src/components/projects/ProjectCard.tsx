@@ -3,6 +3,9 @@ import { Users, CheckCircle2, Clock } from "lucide-react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { isTemporaryId } from "@/lib/utils";
+import { useTasksByProject } from "@/api/tasks/queries";
+import type { CursorPaginatedResponse } from "@/api";
+import type { Task } from "@/state/tasks/types";
 
 interface ProjectCardProps {
   project: Project;
@@ -18,10 +21,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
     }
   };
 
-  // TODO: Implement task hooks when task API is ready
-  const tasks: any[] = []; // taskManager.getTasksByProjectId(project.id);
+  const tasksQuery = useTasksByProject(project.id);
+  const projectTasks = tasksQuery.data?.pages.flatMap((page: CursorPaginatedResponse<Task>) => page.data ?? []) ?? [];
 
-  const projectTasks = tasks.filter((t) => t.projectId === project.id);
   const completedTasks = projectTasks.filter((t) => t.status === "DONE").length;
   const totalTasks = projectTasks.length;
   const completionRate =
