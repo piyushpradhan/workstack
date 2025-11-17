@@ -1,6 +1,6 @@
 import { useDrag } from "react-dnd";
 import { TaskCard } from "./TaskCard";
-import type { Task } from "@/state";
+import type { Task } from "@/api/tasks/types";
 import { isTemporaryId } from "@/lib/utils";
 
 interface DraggableTaskCardProps {

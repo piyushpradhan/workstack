@@ -9,8 +9,10 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
   projectId: string;
-  ownerId: string;
-  memberIds: string[];
+  ownerId?: string;
+  memberIds?: string[];
+  owners?: Array<{ id: string; name?: string; email: string }>;
+  members?: Array<{ id: string; name?: string; email: string }>;
 }
 
 export type TaskStatus =

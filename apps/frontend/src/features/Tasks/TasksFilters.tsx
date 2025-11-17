@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, SlidersHorizontal } from "lucide-react";
@@ -53,6 +54,26 @@ export function TasksFilters({
   hasActiveFilters,
   clearFilters,
 }: TasksFiltersProps) {
+  const [projectSearch, setProjectSearch] = useState("");
+  const [userSearch, setUserSearch] = useState("");
+
+  const filteredProjects = useMemo(() => {
+    if (!projectSearch.trim()) return projects;
+    const searchLower = projectSearch.toLowerCase();
+    return projects.filter((p) =>
+      p.name.toLowerCase().includes(searchLower)
+    );
+  }, [projects, projectSearch]);
+
+  const filteredUsers = useMemo(() => {
+    if (!userSearch.trim()) return users;
+    const searchLower = userSearch.toLowerCase();
+    return users.filter((u) =>
+      u.name?.toLowerCase().includes(searchLower) ||
+      u.id.toLowerCase().includes(searchLower)
+    );
+  }, [users, userSearch]);
+
   const toggleFilter = <T,>(
     value: T,
     selected: T[],
@@ -95,22 +116,43 @@ export function TasksFilters({
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="w-64 max-h-[80vh] overflow-y-auto"
+          className="w-80 max-h-[60vh] overflow-y-auto"
         >
-          <DropdownMenuLabel>
-            Filter by Project
-          </DropdownMenuLabel>
-          {projects?.map((project) => (
-            <DropdownMenuCheckboxItem
-              key={project.id}
-              checked={selectedProjects.includes(project.id)}
-              onCheckedChange={() =>
-                toggleFilter(project.id, selectedProjects, setSelectedProjects)
-              }
-            >
-              {project.name}
-            </DropdownMenuCheckboxItem>
-          ))}
+          <div className="p-2 space-y-2">
+            <DropdownMenuLabel className="px-2">
+              Filter by Project
+            </DropdownMenuLabel>
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={projectSearch}
+                onChange={(e) => setProjectSearch(e.target.value)}
+                placeholder="Search projects..."
+                className="pl-8 h-8 text-sm"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          </div>
+          <div className="max-h-40 overflow-y-auto">
+            {filteredProjects.length > 0 ? (
+              filteredProjects.map((project) => (
+                <DropdownMenuCheckboxItem
+                  key={project.id}
+                  checked={selectedProjects.includes(project.id)}
+                  onCheckedChange={() =>
+                    toggleFilter(project.id, selectedProjects, setSelectedProjects)
+                  }
+                  className="px-4"
+                >
+                  <span className="truncate">{project.name}</span>
+                </DropdownMenuCheckboxItem>
+              ))
+            ) : (
+              <div className="px-4 py-2 text-sm text-muted-foreground text-center">
+                No projects found
+              </div>
+            )}
+          </div>
 
           <DropdownMenuSeparator />
           <DropdownMenuLabel>
@@ -159,20 +201,41 @@ export function TasksFilters({
           )}
 
           <DropdownMenuSeparator />
-          <DropdownMenuLabel>
-            Filter by Assignee
-          </DropdownMenuLabel>
-          {users?.map((user) => (
-            <DropdownMenuCheckboxItem
-              key={user.id}
-              checked={selectedAssignees.includes(user.id)}
-              onCheckedChange={() =>
-                toggleFilter(user.id, selectedAssignees, setSelectedAssignees)
-              }
-            >
-              {user.name}
-            </DropdownMenuCheckboxItem>
-          ))}
+          <div className="p-2 space-y-2">
+            <DropdownMenuLabel className="px-2">
+              Filter by Assignee
+            </DropdownMenuLabel>
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                placeholder="Search users..."
+                className="pl-8 h-8 text-sm"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          </div>
+          <div className="max-h-40 overflow-y-auto">
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <DropdownMenuCheckboxItem
+                  key={user.id}
+                  checked={selectedAssignees.includes(user.id)}
+                  onCheckedChange={() =>
+                    toggleFilter(user.id, selectedAssignees, setSelectedAssignees)
+                  }
+                  className="px-4"
+                >
+                  <span className="truncate">{user.name || user.id}</span>
+                </DropdownMenuCheckboxItem>
+              ))
+            ) : (
+              <div className="px-4 py-2 text-sm text-muted-foreground text-center">
+                No users found
+              </div>
+            )}
+          </div>
 
           {hasActiveFilters && (
             <>

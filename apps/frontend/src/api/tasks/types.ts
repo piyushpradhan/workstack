@@ -1,16 +1,18 @@
 export interface Task {
   id: string;
   title: string;
-  description?: string;
+  description?: string | null;
   status: TaskStatus;
   priority: TaskPriority;
-  dueDate?: string;
-  completedAt?: string;
+  dueDate?: string | null;
+  completedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   projectId: string;
-  ownerId: string;
-  memberIds: string[];
+  ownerId?: string;
+  memberIds?: string[];
+  owners?: Array<{ id: string; name?: string; email: string }>;
+  members?: Array<{ id: string; name?: string; email: string }>;
 }
 
 export type TaskStatus =
@@ -39,4 +41,6 @@ export interface UpdateTaskRequest {
   priority?: TaskPriority;
   dueDate?: string;
   completedAt?: string;
+  ownerIds?: string[];
+  memberIds?: string[];
 }

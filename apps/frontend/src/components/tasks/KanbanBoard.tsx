@@ -2,10 +2,12 @@ import { TaskModal } from "./TaskModal";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useAllTasks, useTasksByProject } from "@/api/tasks/queries";
-import type { Task, TaskStatus } from "@/state";
+import type { TaskStatus } from "@/state";
+import type { Task } from "@/api/tasks/types";
 import { useNavigate, useParams } from "react-router-dom";
 import { KanbanColumn } from "./KanbanColumn";
 import { isTemporaryId } from "@/lib/utils";
+import type { TaskFilters } from "@/api/tasks";
 
 const columns: { status: TaskStatus; label: string; color: string }[] = [
   { status: "TODO", label: "Todo", color: "muted" },
@@ -15,11 +17,15 @@ const columns: { status: TaskStatus; label: string; color: string }[] = [
   { status: "CANCELLED", label: "Cancelled", color: "destructive" },
 ];
 
-export function KanbanBoard() {
+interface KanbanBoardProps {
+  filters?: TaskFilters;
+}
+
+export function KanbanBoard({ filters }: KanbanBoardProps = {}) {
   const { id: projectId } = useParams();
   const tasksByProjectQuery = useTasksByProject(projectId ?? "");
   const tasksByProject = tasksByProjectQuery.data?.pages.flatMap(page => page.data) ?? [];
-  const allTasksQuery = useAllTasks();
+  const allTasksQuery = useAllTasks(50, filters);
   const allTasks = allTasksQuery.data?.pages.flatMap(page => page.data) ?? [];
   const tasks = projectId ? tasksByProject : allTasks;
   const tasksQuery = projectId ? tasksByProjectQuery : allTasksQuery;

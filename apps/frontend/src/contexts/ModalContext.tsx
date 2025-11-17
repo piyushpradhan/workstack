@@ -41,6 +41,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
   };
 
   const openModal = (modal: keyof ModalState) => {
+    console.log({ modal });
     setModalState((prev) => ({ ...prev, [modal]: true }));
   };
 

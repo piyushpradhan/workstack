@@ -10,14 +10,59 @@ class TasksController {
     list: RouteHandler = async (request, reply) => {
         try {
             const userId = request.user.sub;
-            const { limit, cursor } = request.query as { limit?: number; cursor?: string };
+            const query = request.query as {
+                limit?: number;
+                cursor?: string;
+                search?: string;
+                projectIds?: string | string[];
+                statuses?: string | string[];
+                priorities?: string | string[];
+                assigneeIds?: string | string[];
+                sort?: string;
+            };
+
             const defaultLimit = 10;
-            const actualLimit = limit && limit > 0 ? Math.min(limit, 100) : defaultLimit; // Cap at 100
+            const actualLimit = query.limit && query.limit > 0 ? Math.min(query.limit, 100) : defaultLimit;
+
+            const projectIds = Array.isArray(query.projectIds)
+                ? query.projectIds
+                : query.projectIds
+                    ? [query.projectIds]
+                    : undefined;
+            const statuses = Array.isArray(query.statuses)
+                ? query.statuses
+                : query.statuses
+                    ? [query.statuses]
+                    : undefined;
+            const priorities = Array.isArray(query.priorities)
+                ? query.priorities
+                : query.priorities
+                    ? [query.priorities]
+                    : undefined;
+            const assigneeIds = Array.isArray(query.assigneeIds)
+                ? query.assigneeIds
+                : query.assigneeIds
+                    ? [query.assigneeIds]
+                    : undefined;
+
+            const appliedSort: Record<string, string> = {};
+            if (query.sort) {
+                query.sort.split(',').forEach((sort: string) => {
+                    const [sortName, sortValue] = sort.split(':');
+                    appliedSort[sortName] = sortValue;
+                });
+            }
 
             const { tasks, cursor: nextCursor, hasNextPage } = await this.tasksService.getAllUsersTasks({
                 userId,
                 limit: actualLimit,
-                cursor
+                cursor: query.cursor,
+                search: query.search,
+                projectIds,
+                statuses,
+                priorities,
+                assigneeIds,
+                sort: appliedSort
             });
 
             return ResponseHelper.cursorPaginated(reply, tasks, nextCursor, hasNextPage, "Tasks retrieved successfully");
@@ -30,14 +75,52 @@ class TasksController {
     listOwned: RouteHandler = async (request, reply) => {
         try {
             const userId = request.user.sub;
-            const { limit, cursor } = request.query as { limit?: number; cursor?: string };
+            const query = request.query as {
+                limit?: number;
+                cursor?: string;
+                search?: string;
+                projectIds?: string | string[];
+                statuses?: string | string[];
+                priorities?: string | string[];
+                sort?: string;
+            };
+
             const defaultLimit = 10;
-            const actualLimit = limit && limit > 0 ? Math.min(limit, 100) : defaultLimit; // Cap at 100
+            const actualLimit = query.limit && query.limit > 0 ? Math.min(query.limit, 100) : defaultLimit;
+
+            const projectIds = Array.isArray(query.projectIds)
+                ? query.projectIds
+                : query.projectIds
+                    ? [query.projectIds]
+                    : undefined;
+            const statuses = Array.isArray(query.statuses)
+                ? query.statuses
+                : query.statuses
+                    ? [query.statuses]
+                    : undefined;
+            const priorities = Array.isArray(query.priorities)
+                ? query.priorities
+                : query.priorities
+                    ? [query.priorities]
+                    : undefined;
+
+            const appliedSort: Record<string, string> = {};
+            if (query.sort) {
+                query.sort.split(',').forEach((sort: string) => {
+                    const [sortName, sortValue] = sort.split(':');
+                    appliedSort[sortName] = sortValue;
+                });
+            }
 
             const { tasks, cursor: nextCursor, hasNextPage } = await this.tasksService.getAllOwnedTasks({
                 userId,
                 limit: actualLimit,
-                cursor
+                cursor: query.cursor,
+                search: query.search,
+                projectIds,
+                statuses,
+                priorities,
+                sort: appliedSort
             });
 
             return ResponseHelper.cursorPaginated(reply, tasks, nextCursor, hasNextPage, "Owned tasks retrieved successfully");
@@ -51,15 +134,53 @@ class TasksController {
         try {
             const userId = request.user.sub;
             const { projectId } = request.params as { projectId: string };
-            const { limit, cursor } = request.query as { limit?: number; cursor?: string };
+            const query = request.query as {
+                limit?: number;
+                cursor?: string;
+                search?: string;
+                statuses?: string | string[];
+                priorities?: string | string[];
+                assigneeIds?: string | string[];
+                sort?: string;
+            };
+
             const defaultLimit = 10;
-            const actualLimit = limit && limit > 0 ? Math.min(limit, 100) : defaultLimit; // Cap at 100
+            const actualLimit = query.limit && query.limit > 0 ? Math.min(query.limit, 100) : defaultLimit;
+
+            const statuses = Array.isArray(query.statuses)
+                ? query.statuses
+                : query.statuses
+                    ? [query.statuses]
+                    : undefined;
+            const priorities = Array.isArray(query.priorities)
+                ? query.priorities
+                : query.priorities
+                    ? [query.priorities]
+                    : undefined;
+            const assigneeIds = Array.isArray(query.assigneeIds)
+                ? query.assigneeIds
+                : query.assigneeIds
+                    ? [query.assigneeIds]
+                    : undefined;
+
+            const appliedSort: Record<string, string> = {};
+            if (query.sort) {
+                query.sort.split(',').forEach((sort: string) => {
+                    const [sortName, sortValue] = sort.split(':');
+                    appliedSort[sortName] = sortValue;
+                });
+            }
 
             const { tasks, cursor: nextCursor, hasNextPage } = await this.tasksService.getTasksByProject({
                 projectId,
                 userId,
                 limit: actualLimit,
-                cursor
+                cursor: query.cursor,
+                search: query.search,
+                statuses,
+                priorities,
+                assigneeIds,
+                sort: appliedSort
             });
 
             return ResponseHelper.cursorPaginated(reply, tasks, nextCursor, hasNextPage, "Project tasks retrieved successfully");
@@ -124,21 +245,26 @@ class TasksController {
                 status?: string;
                 priority?: string;
                 dueDate?: string;
+                ownerIds?: string[];
+                memberIds?: string[];
             };
 
-            // Convert dueDate string to Date if provided
             const updateData: {
                 title?: string;
                 description?: string;
                 status?: string;
                 priority?: string;
                 dueDate?: Date;
+                ownerIds?: string[];
+                memberIds?: string[];
             } = {
                 title: bodyData.title,
                 description: bodyData.description,
                 status: bodyData.status,
                 priority: bodyData.priority,
-                dueDate: bodyData.dueDate ? new Date(bodyData.dueDate) : undefined
+                dueDate: bodyData.dueDate ? new Date(bodyData.dueDate) : undefined,
+                ownerIds: bodyData.ownerIds,
+                memberIds: bodyData.memberIds,
             };
 
             const task = await this.tasksService.updateTask({
@@ -146,7 +272,6 @@ class TasksController {
                 userId,
                 updateData
             });
-
 
             if (!task) {
                 return ResponseHelper.error(reply, "Task not found", 404, "TaskNotFound");

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { stateKeys } from "@/state";
 import type { UpdateProjectRequest, Project } from "@/api/projects/types";
+import type { ProjectFilters } from "@/api/projects";
 import {
   getAllProjects,
   getProjectById,
@@ -20,10 +21,10 @@ export const projectKeys = {
   byUser: stateKeys.projects.byUser,
 } as const;
 
-export const useAllProjects = (limit: number = 21) => {
+export const useAllProjects = (limit: number = 21, filters?: ProjectFilters) => {
   return useInfiniteQuery({
-    queryKey: [...projectKeys.lists(), limit],
-    queryFn: ({ pageParam }) => getAllProjects(limit, pageParam),
+    queryKey: [...projectKeys.lists(), limit, filters],
+    queryFn: ({ pageParam }) => getAllProjects(limit, pageParam, filters),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => {
       return lastPage.meta.hasNextPage ? lastPage.cursor : undefined;

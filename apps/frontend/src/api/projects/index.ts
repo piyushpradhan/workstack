@@ -6,14 +6,38 @@ import type {
 } from "@/api/projects/types";
 import type { CursorPaginatedResponse } from "@/api/types";
 
+export interface ProjectFilters {
+  search?: string;
+  statuses?: string[];
+  sort?: Record<string, string>;
+}
+
 export const getAllProjects = async (
   limit?: number,
-  cursor?: string
+  cursor?: string,
+  filters?: ProjectFilters
 ): Promise<CursorPaginatedResponse<Project>> => {
   const params = new URLSearchParams();
 
   if (limit) params.append("limit", limit.toString());
   if (cursor) params.append("cursor", cursor);
+  
+  if (filters?.search) {
+    params.append("filters", `search:${filters.search}`);
+  }
+  
+  if (filters?.statuses && filters.statuses.length > 0) {
+    filters.statuses.forEach((status) => {
+      params.append("filters", `status:${status}`);
+    });
+  }
+  
+  if (filters?.sort && Object.keys(filters.sort).length > 0) {
+    const sortString = Object.entries(filters.sort)
+      .map(([key, value]) => `${key}:${value}`)
+      .join(",");
+    params.append("sort", sortString);
+  }
 
   const queryString = params.toString();
 

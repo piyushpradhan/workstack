@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { PriorityIndicator } from "@/components/common/PriorityIndicator";
-import { ArrowLeft, Link as LinkIcon } from "lucide-react";
+import { ArrowLeft, Link as LinkIcon, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import type { TaskPriority, TaskStatus } from "@/state";
 
 interface TaskDetailHeaderProps {
@@ -32,6 +33,7 @@ export function TaskDetailHeader({
   onShare,
   onTitleChange,
 }: TaskDetailHeaderProps) {
+  const navigate = useNavigate();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [draftTitle, setDraftTitle] = useState(title);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -106,6 +108,15 @@ export function TaskDetailHeader({
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => taskId && navigate(`/tasks/${taskId}/settings`)}
+            className="gap-2"
+          >
+            <Settings className="w-4 h-4" />
+            Settings
+          </Button>
           <Button
             variant="outline"
             size="sm"

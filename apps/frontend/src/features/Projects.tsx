@@ -19,38 +19,46 @@ import { useModal } from "@/contexts/ModalContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useErrorHandler } from "@/components/ErrorBoundary";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { ProjectsFilters } from "./Projects/ProjectsFilters";
+
+type ProjectStatus = "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
 
 const Projects = () => {
   useDocumentTitle("Projects");
   const { user: currentUser } = useAuth();
-  const { error, fetchNextPage, isFetchingNextPage, isLoading, hasNextPage, data, refetch } = useAllProjects();
-  const projects = data?.pages.flatMap(page => page.data) ?? [];
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [filter, setFilter] = useState<"all" | "owned">("all");
+  const [selectedStatuses, setSelectedStatuses] = useState<ProjectStatus[]>([]);
+
+  const apiFilters = useMemo(() => {
+    const result: {
+      search?: string;
+      statuses?: string[];
+    } = {};
+
+    if (searchQuery.trim()) {
+      result.search = searchQuery.trim();
+    }
+    if (selectedStatuses.length > 0) {
+      result.statuses = selectedStatuses;
+    }
+
+    return Object.keys(result).length > 0 ? result : undefined;
+  }, [searchQuery, selectedStatuses]);
+
+  const { error, fetchNextPage, isFetchingNextPage, isLoading, hasNextPage, data, refetch } = useAllProjects(21, apiFilters);
+  const projects = data?.pages.flatMap(page => page.data) ?? [];
   const { openModal } = useModal();
   const { handleError } = useErrorHandler();
 
-  const filteredProjects = useMemo(() => {
-    if (!projects || projects.length === 0) return [];
+  const hasActiveFilters = useMemo(
+    () => selectedStatuses.length > 0,
+    [selectedStatuses]
+  );
 
-    return projects.filter((project: Project) => {
-      try {
-        const matchesSearch =
-          project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          project.description
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase());
-        const matchesFilter =
-          filter === "all" ||
-          project.members.some((member) => member.id === currentUser?.id);
-        return matchesSearch && matchesFilter;
-      } catch (err) {
-        handleError(err as Error, "Projects filtering");
-        return false;
-      }
-    });
-  }, [projects, searchQuery, filter, currentUser?.id, handleError]);
+  const clearFilters = () => {
+    setSelectedStatuses([]);
+  };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -112,15 +120,15 @@ const Projects = () => {
           <div className="min-w-0">
             <h1 className="text-foreground mb-2 text-2xl font-semibold">Projects</h1>
             <p className="text-muted-foreground text-base">
-              {filteredProjects.length === 0
+              {projects.length === 0
                 ? "No projects yet"
-                : `${filteredProjects.length} ${filteredProjects.length === 1 ? "project" : "projects"}`}
+                : `${projects.length} ${projects.length === 1 ? "project" : "projects"}`}
             </p>
           </div>
         </div>
 
         {/* Filters and Search */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4">
           <div className="relative flex-1 sm:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -134,38 +142,12 @@ const Projects = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div
-              className="flex items-center gap-2 bg-muted border rounded-md p-1"
-              role="tablist"
-              aria-label="Project filters"
-            >
-              <button
-                onClick={() => setFilter("all")}
-                className={`px-3 py-1.5 rounded transition-colors text-sm ${filter === "all"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-                  }`}
-                role="tab"
-                aria-selected={filter === "all"}
-                aria-controls="projects-content"
-              >
-                <span className="hidden sm:inline">All Projects</span>
-                <span className="sm:hidden">All</span>
-              </button>
-              <button
-                onClick={() => setFilter("owned")}
-                className={`px-3 py-1.5 rounded transition-colors text-sm ${filter === "owned"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-                  }`}
-                role="tab"
-                aria-selected={filter === "owned"}
-                aria-controls="projects-content"
-              >
-                <span className="hidden sm:inline">Owned by Me</span>
-                <span className="sm:hidden">Mine</span>
-              </button>
-            </div>
+            <ProjectsFilters
+              selectedStatuses={selectedStatuses}
+              setSelectedStatuses={setSelectedStatuses}
+              hasActiveFilters={hasActiveFilters}
+              clearFilters={clearFilters}
+            />
 
             <div
               className="flex items-center gap-1 bg-muted border rounded-md p-1"
@@ -198,7 +180,7 @@ const Projects = () => {
           </div>
         </div>
 
-        {filteredProjects.length > 0 ? (
+        {projects.length > 0 ? (
           <div
             className="flex-1 overflow-y-auto overflow-x-hidden w-full scroll-smooth"
             onScroll={handleScroll}
@@ -209,14 +191,14 @@ const Projects = () => {
               layout
               id="projects-content"
               role="region"
-              aria-label={`${filteredProjects.length} projects in ${viewMode} view`}
+              aria-label={`${projects.length} projects in ${viewMode} view`}
               className={
                 viewMode === "grid"
                   ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-1"
                   : "space-y-4 p-1"
               }
             >
-              {filteredProjects.map((project: Project) => (
+              {projects.map((project: Project) => (
                 <ProjectCard key={project.id} project={project} />
               ))}
             </motion.div>
@@ -233,7 +215,7 @@ const Projects = () => {
                 </div>
               </div>
             )}
-            {!hasNextPage && filteredProjects.length > 20 && (
+            {!hasNextPage && projects.length > 20 && (
               <div
                 className="flex items-center justify-center py-6 px-4"
                 role="status"

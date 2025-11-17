@@ -40,33 +40,81 @@ class ProjectsService {
     }
   }
 
-  getAllUsersProjects = async ({ userId, limit, cursor }: { userId: string; limit: number; cursor?: string }) => {
+  getAllUsersProjects = async ({ userId, limit, cursor, filters, sort }: { userId: string; limit: number; cursor?: string; filters?: Record<string, string | string[]>; sort?: Record<string, string>; }) => {
     try {
+      const whereClause: any = {
+        AND: [
+          {
+            OR: [
+              {
+                owners: {
+                  some: {
+                    userId: userId
+                  }
+                }
+              },
+              {
+                members: {
+                  some: {
+                    userId: userId
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      };
+
+      if (filters && Object.keys(filters).length > 0) {
+        Object.entries(filters).forEach(([filterName, filterValue]) => {
+          if (filterName === 'search' && typeof filterValue === 'string') {
+            whereClause.AND.push({
+              OR: [
+                {
+                  name: {
+                    contains: filterValue.trim(),
+                    mode: "insensitive"
+                  }
+                },
+                {
+                  description: {
+                    contains: filterValue.trim(),
+                    mode: "insensitive"
+                  }
+                }
+              ]
+            });
+          } else if (filterName === 'status') {
+            const statuses = Array.isArray(filterValue) ? filterValue : [filterValue];
+            if (statuses.length > 0) {
+              whereClause.AND.push({
+                status: {
+                  in: statuses
+                }
+              });
+            }
+          }
+        });
+      }
+
+      const orderByClause: any[] = [];
+      if (sort && Object.keys(sort).length > 0) {
+        Object.entries(sort).forEach(([sortName, sortValue]) => {
+          orderByClause.push({
+            [sortName]: sortValue
+          });
+        });
+      }
+      if (orderByClause.length === 0) {
+        orderByClause.push({ id: 'desc' });
+      }
+
       const projects = await this.project.findMany({
-        take: limit + 1, // Fetch one extra to determine if there's a next page
+        take: limit + 1,
         skip: cursor ? 1 : 0,
         cursor: cursor ? { id: cursor } : undefined,
-        where: {
-          OR: [
-            {
-              owners: {
-                some: {
-                  userId: userId
-                }
-              }
-            },
-            {
-              members: {
-                some: {
-                  userId: userId
-                }
-              }
-            }
-          ]
-        },
-        orderBy: {
-          id: 'desc'
-        },
+        where: whereClause,
+        orderBy: orderByClause,
         include: {
           owners: {
             include: {
@@ -212,9 +260,23 @@ class ProjectsService {
     }
   };
 
-  updateProject = async ({ projectId, userId, updateData }: { projectId: string; userId: string; updateData: { name?: string; description?: string } }) => {
+  updateProject = async ({
+    projectId,
+    userId,
+    updateData
+  }: {
+    projectId: string;
+    userId: string;
+    updateData: {
+      name?: string;
+      description?: string;
+      status?: string;
+      startDate?: Date;
+      endDate?: Date;
+      memberIds?: string[];
+    };
+  }) => {
     try {
-      // First check if user is an owner of the project
       const project = await this.project.findFirst({
         where: {
           id: projectId,
@@ -234,12 +296,33 @@ class ProjectsService {
         return null;
       }
 
+      const { memberIds: updateMemberIds, ...projectUpdateData } = updateData;
+
+      const updatePayload: any = { ...projectUpdateData };
+      if (updatePayload.status) {
+        updatePayload.status = updatePayload.status as any;
+      }
+
       await this.project.update({
         where: {
           id: projectId
         },
-        data: updateData
+        data: updatePayload
       });
+
+      if (updateMemberIds !== undefined) {
+        await this.project.update({
+          where: { id: projectId },
+          data: {
+            members: {
+              deleteMany: {},
+              create: updateMemberIds.map((memberId) => ({
+                userId: memberId
+              }))
+            }
+          }
+        });
+      }
 
       // Fetch full project data with relations for proper caching
       const fullProject = await this.project.findFirst({
@@ -269,10 +352,9 @@ class ProjectsService {
         members: fullProject.members.map(member => member.user)
       };
 
-      // Invalidate all the related cache keys
-      const ownerIds = fullProject.owners.map(owner => owner.userId);
-      const memberIds = fullProject.members.map(member => member.userId);
-      const allUserIds = [...new Set([...ownerIds, ...memberIds])];
+      const ownerUserIds = fullProject.owners.map(owner => owner.userId);
+      const memberUserIds = fullProject.members.map(member => member.userId);
+      const allUserIds = [...new Set([...ownerUserIds, ...memberUserIds])];
 
       const keysToInvalidate = [
         `project:${projectId}`

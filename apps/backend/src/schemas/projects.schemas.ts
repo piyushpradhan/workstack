@@ -145,6 +145,7 @@ export const ProjectRequestSchemas = {
         ])),
         startDate: Type.Optional(BaseSchemas.Timestamp),
         endDate: Type.Optional(BaseSchemas.Timestamp),
+        memberIds: Type.Optional(Type.Array(BaseSchemas.Id)),
     }, {
         description: 'Update project request',
         additionalProperties: false,

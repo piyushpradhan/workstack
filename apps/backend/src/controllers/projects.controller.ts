@@ -11,14 +11,53 @@ class ProjectsController {
   list: RouteHandler = async (request, reply) => {
     try {
       const userId = request.user.sub;
-      const { limit, cursor } = request.query as { limit?: number; cursor?: string };
+      const query = request.query as {
+        limit?: number;
+        cursor?: string;
+        filters?: string | string[];
+        sort?: string;
+      };
       const defaultLimit = 10;
-      const actualLimit = limit && limit > 0 ? Math.min(limit, 100) : defaultLimit; // Cap at 100
+      const actualLimit = query.limit && query.limit > 0 ? Math.min(query.limit, 100) : defaultLimit;
+
+      const appliedFilters: Record<string, string | string[]> = {};
+      if (query.filters) {
+        const filtersArray = Array.isArray(query.filters) ? query.filters : [query.filters];
+        filtersArray.forEach((filter: string) => {
+          if (filter && filter.includes(':')) {
+            const [filterName, filterValue] = filter.split(':');
+            if (filterName && filterValue) {
+              if (appliedFilters[filterName]) {
+                const existing = appliedFilters[filterName];
+                if (Array.isArray(existing)) {
+                  existing.push(filterValue);
+                } else {
+                  appliedFilters[filterName] = [existing, filterValue];
+                }
+              } else {
+                appliedFilters[filterName] = filterValue;
+              }
+            }
+          }
+        });
+      }
+
+      const appliedSort: Record<string, string> = {};
+      if (query.sort) {
+        query.sort.split(',').forEach((sort: string) => {
+          const [sortName, sortValue] = sort.split(':');
+          if (sortName && sortValue) {
+            appliedSort[sortName] = sortValue;
+          }
+        });
+      }
 
       const { projects, cursor: nextCursor, hasNextPage } = await this.projectsService.getAllUsersProjects({
         userId,
         limit: actualLimit,
-        cursor
+        cursor: query.cursor,
+        filters: appliedFilters,
+        sort: appliedSort,
       });
 
       return ResponseHelper.cursorPaginated(reply, projects, nextCursor, hasNextPage, "Projects retrieved successfully");
@@ -80,7 +119,30 @@ class ProjectsController {
     try {
       const userId = request.user.sub;
       const { id } = request.params as { id: string };
-      const updateData = request.body as { name?: string; description?: string };
+      const bodyData = request.body as {
+        name?: string;
+        description?: string;
+        status?: string;
+        startDate?: string;
+        endDate?: string;
+        memberIds?: string[];
+      };
+
+      const updateData: {
+        name?: string;
+        description?: string;
+        status?: string;
+        startDate?: Date;
+        endDate?: Date;
+        memberIds?: string[];
+      } = {
+        name: bodyData.name,
+        description: bodyData.description,
+        status: bodyData.status,
+        startDate: bodyData.startDate ? new Date(bodyData.startDate) : undefined,
+        endDate: bodyData.endDate ? new Date(bodyData.endDate) : undefined,
+        memberIds: bodyData.memberIds,
+      };
 
       const project = await this.projectsService.updateProject({
         projectId: id,

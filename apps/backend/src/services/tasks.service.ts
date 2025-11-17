@@ -90,34 +90,124 @@ class TasksService {
     }
   }
 
-  getAllUsersTasks = async ({ userId, limit, cursor }: { userId: string; limit: number; cursor?: string }) => {
+  getAllUsersTasks = async ({
+    userId,
+    limit,
+    cursor,
+    search,
+    projectIds,
+    statuses,
+    priorities,
+    assigneeIds,
+    sort
+  }: {
+    userId: string;
+    limit: number;
+    cursor?: string;
+    search?: string;
+    projectIds?: string[];
+    statuses?: string[];
+    priorities?: string[];
+    assigneeIds?: string[];
+    sort?: Record<string, string>;
+  }) => {
     try {
-      // Don't cache paginated results
+      const whereClause: any = {
+        AND: [
+          {
+            OR: [
+              {
+                owners: {
+                  some: {
+                    userId: userId
+                  }
+                }
+              },
+              {
+                members: {
+                  some: {
+                    userId: userId
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      };
+
+      if (search && search.trim()) {
+        whereClause.AND.push({
+          OR: [
+            {
+              title: {
+                contains: search.trim(),
+                mode: "insensitive"
+              }
+            },
+            {
+              description: {
+                contains: search.trim(),
+                mode: "insensitive"
+              }
+            }
+          ]
+        });
+      }
+
+      if (projectIds && projectIds.length > 0) {
+        whereClause.AND.push({
+          projectId: {
+            in: projectIds
+          }
+        });
+      }
+
+      if (statuses && statuses.length > 0) {
+        whereClause.AND.push({
+          status: {
+            in: statuses
+          }
+        });
+      }
+
+      if (priorities && priorities.length > 0) {
+        whereClause.AND.push({
+          priority: {
+            in: priorities
+          }
+        });
+      }
+
+      if (assigneeIds && assigneeIds.length > 0) {
+        whereClause.AND.push({
+          owners: {
+            some: {
+              userId: {
+                in: assigneeIds
+              }
+            }
+          }
+        });
+      }
+
+      const orderByClause: any[] = [];
+      if (sort && Object.keys(sort).length > 0) {
+        Object.entries(sort).forEach((sort: [string, string]) => {
+          orderByClause.push({
+            [sort[0]]: sort[1]
+          });
+        });
+      }
+      if (orderByClause.length === 0) {
+        orderByClause.push({ id: 'desc' });
+      }
+
       const tasks = await this.task.findMany({
         take: limit + 1,
         skip: cursor ? 1 : 0,
         cursor: cursor ? { id: cursor } : undefined,
-        where: {
-          OR: [
-            {
-              owners: {
-                some: {
-                  userId: userId
-                }
-              }
-            },
-            {
-              members: {
-                some: {
-                  userId: userId
-                }
-              }
-            }
-          ]
-        },
-        orderBy: {
-          id: 'desc'
-        },
+        where: whereClause,
+        orderBy: orderByClause,
         include: {
           project: {
             select: {
@@ -139,7 +229,6 @@ class TasksService {
         }
       });
 
-      // Check if there's a next page
       const hasNextPage = tasks.length > limit;
       const tasksToReturn = hasNextPage ? tasks.slice(0, limit) : tasks;
 
@@ -159,22 +248,100 @@ class TasksService {
     }
   };
 
-  getAllOwnedTasks = async ({ userId, limit, cursor }: { userId: string; limit: number; cursor?: string }) => {
+  getAllOwnedTasks = async ({
+    userId,
+    limit,
+    cursor,
+    search,
+    projectIds,
+    statuses,
+    priorities,
+    sort
+  }: {
+    userId: string;
+    limit: number;
+    cursor?: string;
+    search?: string;
+    projectIds?: string[];
+    statuses?: string[];
+    priorities?: string[];
+    sort?: Record<string, string>;
+  }) => {
     try {
+      const whereClause: any = {
+        owners: {
+          some: {
+            userId: userId
+          }
+        }
+      };
+
+      if (search && search.trim()) {
+        whereClause.AND = [
+          {
+            OR: [
+              {
+                title: {
+                  contains: search.trim(),
+                  mode: "insensitive"
+                }
+              },
+              {
+                description: {
+                  contains: search.trim(),
+                  mode: "insensitive"
+                }
+              }
+            ]
+          }
+        ];
+      }
+
+      if (projectIds && projectIds.length > 0) {
+        if (!whereClause.AND) whereClause.AND = [];
+        whereClause.AND.push({
+          projectId: {
+            in: projectIds
+          }
+        });
+      }
+
+      if (statuses && statuses.length > 0) {
+        if (!whereClause.AND) whereClause.AND = [];
+        whereClause.AND.push({
+          status: {
+            in: statuses
+          }
+        });
+      }
+
+      if (priorities && priorities.length > 0) {
+        if (!whereClause.AND) whereClause.AND = [];
+        whereClause.AND.push({
+          priority: {
+            in: priorities
+          }
+        });
+      }
+
+      const orderByClause: any[] = [];
+      if (sort && Object.keys(sort).length > 0) {
+        Object.entries(sort).forEach((sort: [string, string]) => {
+          orderByClause.push({
+            [sort[0]]: sort[1]
+          });
+        });
+      }
+      if (orderByClause.length === 0) {
+        orderByClause.push({ id: 'desc' });
+      }
+
       const tasks = await this.task.findMany({
         take: limit + 1,
         skip: cursor ? 1 : 0,
         cursor: cursor ? { id: cursor } : undefined,
-        where: {
-          owners: {
-            some: {
-              userId: userId
-            }
-          }
-        },
-        orderBy: {
-          id: 'desc'
-        },
+        where: whereClause,
+        orderBy: orderByClause,
         include: {
           project: {
             select: {
@@ -191,7 +358,6 @@ class TasksService {
         }
       });
 
-      // Check if there's a next page
       const hasNextPage = tasks.length > limit;
       const tasksToReturn = hasNextPage ? tasks.slice(0, limit) : tasks;
 
@@ -210,18 +376,102 @@ class TasksService {
     }
   };
 
-  getTasksByProject = async ({ projectId, userId, limit, cursor }: { projectId: string; userId: string; limit: number; cursor?: string }) => {
+  getTasksByProject = async ({
+    projectId,
+    userId,
+    limit,
+    cursor,
+    search,
+    statuses,
+    priorities,
+    assigneeIds,
+    sort
+  }: {
+    projectId: string;
+    userId: string;
+    limit: number;
+    cursor?: string;
+    search?: string;
+    statuses?: string[];
+    priorities?: string[];
+    assigneeIds?: string[];
+    sort?: Record<string, string>;
+  }) => {
     try {
+      const whereClause: any = {
+        projectId
+      };
+
+      if (search && search.trim()) {
+        whereClause.AND = [
+          {
+            OR: [
+              {
+                title: {
+                  contains: search.trim(),
+                  mode: "insensitive"
+                }
+              },
+              {
+                description: {
+                  contains: search.trim(),
+                  mode: "insensitive"
+                }
+              }
+            ]
+          }
+        ];
+      }
+
+      if (statuses && statuses.length > 0) {
+        if (!whereClause.AND) whereClause.AND = [];
+        whereClause.AND.push({
+          status: {
+            in: statuses
+          }
+        });
+      }
+
+      if (priorities && priorities.length > 0) {
+        if (!whereClause.AND) whereClause.AND = [];
+        whereClause.AND.push({
+          priority: {
+            in: priorities
+          }
+        });
+      }
+
+      if (assigneeIds && assigneeIds.length > 0) {
+        if (!whereClause.AND) whereClause.AND = [];
+        whereClause.AND.push({
+          owners: {
+            some: {
+              userId: {
+                in: assigneeIds
+              }
+            }
+          }
+        });
+      }
+
+      const orderByClause: any[] = [];
+      if (sort && Object.keys(sort).length > 0) {
+        Object.entries(sort).forEach((sort: [string, string]) => {
+          orderByClause.push({
+            [sort[0]]: sort[1]
+          });
+        });
+      }
+      if (orderByClause.length === 0) {
+        orderByClause.push({ id: 'desc' });
+      }
+
       const tasks = await this.task.findMany({
         take: limit + 1,
         skip: cursor ? 1 : 0,
         cursor: cursor ? { id: cursor } : undefined,
-        where: {
-          projectId,
-        },
-        orderBy: {
-          id: 'desc'
-        },
+        where: whereClause,
+        orderBy: orderByClause,
         include: {
           project: true,
           owners: {
@@ -237,7 +487,6 @@ class TasksService {
         }
       });
 
-      // Check if there's a next page
       const hasNextPage = tasks.length > limit;
       const tasksToReturn = hasNextPage ? tasks.slice(0, limit) : tasks;
 
@@ -389,6 +638,7 @@ class TasksService {
 
   updateTask = async ({
     taskId,
+    userId,
     updateData
   }: {
     taskId: string;
@@ -399,12 +649,30 @@ class TasksService {
       status?: string;
       priority?: string;
       dueDate?: Date;
+      ownerIds?: string[];
+      memberIds?: string[];
     }
   }) => {
     try {
       const task = await this.task.findFirst({
         where: {
-          id: taskId
+          id: taskId,
+          OR: [
+            {
+              owners: {
+                some: {
+                  userId: userId
+                }
+              }
+            },
+            {
+              members: {
+                some: {
+                  userId: userId
+                }
+              }
+            }
+          ]
         }
       });
 
@@ -412,14 +680,14 @@ class TasksService {
         return null;
       }
 
-      const updatePayload: any = { ...updateData };
+      const { ownerIds: updateOwnerIds, memberIds: updateMemberIds, ...taskUpdateData } = updateData;
 
-      // If status is being updated to DONE, set completedAt
+      const updatePayload: any = { ...taskUpdateData };
+
       if (updateData.status === "DONE" && task.status !== "DONE") {
         updatePayload.completedAt = new Date();
       }
 
-      // If status is being updated from DONE to something else, clear completedAt
       if (updateData.status && updateData.status !== "DONE" && task.status === "DONE") {
         updatePayload.completedAt = null;
       }
@@ -430,6 +698,34 @@ class TasksService {
         },
         data: updatePayload
       });
+
+      if (updateOwnerIds !== undefined) {
+        await this.task.update({
+          where: { id: taskId },
+          data: {
+            owners: {
+              deleteMany: {},
+              create: updateOwnerIds.map((ownerId) => ({
+                userId: ownerId
+              }))
+            }
+          }
+        });
+      }
+
+      if (updateMemberIds !== undefined) {
+        await this.task.update({
+          where: { id: taskId },
+          data: {
+            members: {
+              deleteMany: {},
+              create: updateMemberIds.map((memberId) => ({
+                userId: memberId
+              }))
+            }
+          }
+        });
+      }
 
       // Fetch full task data with relations for proper caching
       const fullTask = await this.task.findFirst({
@@ -466,10 +762,9 @@ class TasksService {
         members: fullTask.members.map(member => member.user)
       };
 
-      // Invalidate all the related cache keys
-      const ownerIds = fullTask.owners.map(owner => owner.userId);
-      const memberIds = fullTask.members.map(member => member.userId);
-      const allUserIds = [...new Set([...ownerIds, ...memberIds])];
+      const ownerUserIds = fullTask.owners.map(owner => owner.userId);
+      const memberUserIds = fullTask.members.map(member => member.userId);
+      const allUserIds = [...new Set([...ownerUserIds, ...memberUserIds])];
 
       const keysToInvalidate = [
         `task:${taskId}`,

@@ -175,7 +175,38 @@ export const listTasksSchema = {
         type: "object",
         properties: {
             limit: { type: "number", minimum: 1, maximum: 100, default: 10, description: "Number of items per page" },
-            cursor: { type: "string", description: "Cursor for pagination" }
+            cursor: { type: "string", description: "Cursor for pagination" },
+            search: { type: "string", description: "Search query for title and description" },
+            projectIds: {
+                type: "array",
+                items: { type: "string" },
+                description: "Filter by project IDs"
+            },
+            statuses: {
+                type: "array",
+                items: {
+                    type: "string",
+                    enum: ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE", "CANCELLED"]
+                },
+                description: "Filter by task statuses"
+            },
+            priorities: {
+                type: "array",
+                items: {
+                    type: "string",
+                    enum: ["LOW", "MEDIUM", "HIGH", "URGENT"]
+                },
+                description: "Filter by task priorities"
+            },
+            assigneeIds: {
+                type: "array",
+                items: { type: "string" },
+                description: "Filter by assignee (owner) user IDs"
+            },
+            sort: {
+                type: "string",
+                description: "Sort parameters in format: field:order,field2:order2 (e.g., createdAt:desc,title:asc)"
+            }
         }
     },
     response: {
@@ -193,7 +224,33 @@ export const listOwnedTasksSchema = {
         type: "object",
         properties: {
             limit: { type: "number", minimum: 1, maximum: 100, default: 10, description: "Number of items per page" },
-            cursor: { type: "string", description: "Cursor for pagination" }
+            cursor: { type: "string", description: "Cursor for pagination" },
+            search: { type: "string", description: "Search query for title and description" },
+            projectIds: {
+                type: "array",
+                items: { type: "string" },
+                description: "Filter by project IDs"
+            },
+            statuses: {
+                type: "array",
+                items: {
+                    type: "string",
+                    enum: ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE", "CANCELLED"]
+                },
+                description: "Filter by task statuses"
+            },
+            priorities: {
+                type: "array",
+                items: {
+                    type: "string",
+                    enum: ["LOW", "MEDIUM", "HIGH", "URGENT"]
+                },
+                description: "Filter by task priorities"
+            },
+            sort: {
+                type: "string",
+                description: "Sort parameters in format: field:order,field2:order2 (e.g., createdAt:desc,title:asc)"
+            }
         }
     },
     response: {
@@ -211,7 +268,33 @@ export const listTasksByProjectSchema = {
         type: "object",
         properties: {
             limit: { type: "number", minimum: 1, maximum: 100, default: 10, description: "Number of items per page" },
-            cursor: { type: "string", description: "Cursor for pagination" }
+            cursor: { type: "string", description: "Cursor for pagination" },
+            search: { type: "string", description: "Search query for title and description" },
+            statuses: {
+                type: "array",
+                items: {
+                    type: "string",
+                    enum: ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE", "CANCELLED"]
+                },
+                description: "Filter by task statuses"
+            },
+            priorities: {
+                type: "array",
+                items: {
+                    type: "string",
+                    enum: ["LOW", "MEDIUM", "HIGH", "URGENT"]
+                },
+                description: "Filter by task priorities"
+            },
+            assigneeIds: {
+                type: "array",
+                items: { type: "string" },
+                description: "Filter by assignee (owner) user IDs"
+            },
+            sort: {
+                type: "string",
+                description: "Sort parameters in format: field:order,field2:order2 (e.g., createdAt:desc,title:asc)"
+            }
         }
     },
     response: {
@@ -251,6 +334,30 @@ export const updateTaskSchema = {
     tags: ["Tasks"],
     summary: "Update Task",
     security: [{ bearerAuth: [] }],
+    body: {
+        type: "object",
+        properties: {
+            title: { type: "string" },
+            description: { type: "string" },
+            status: {
+                type: "string",
+                enum: ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE", "CANCELLED"]
+            },
+            priority: {
+                type: "string",
+                enum: ["LOW", "MEDIUM", "HIGH", "URGENT"]
+            },
+            dueDate: { type: "string", format: "date-time" },
+            ownerIds: {
+                type: "array",
+                items: { type: "string" }
+            },
+            memberIds: {
+                type: "array",
+                items: { type: "string" }
+            }
+        }
+    },
     response: {
         200: createSuccessResponseSchema({
             ...taskSchema,

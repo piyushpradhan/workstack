@@ -153,7 +153,7 @@ const ProjectDetail = () => {
 
         {isOwner && (
           <Button
-            onClick={() => { }}
+            onClick={() => navigate(`/projects/${id}/settings`)}
             variant="outline"
             className="gap-2 bg-card border-border text-card-foreground hover:bg-accent w-full sm:w-auto flex-shrink-0"
           >

@@ -57,7 +57,7 @@ class UserController {
             const projectIds = (request.params as { projectIds: string }).projectIds.split(",");
             const { limit, cursor } = request.query as { limit?: number; cursor?: string };
             const defaultLimit = 10;
-            const actualLimit = limit && limit > 0 ? Math.min(limit, 100) : defaultLimit; // Cap at 100
+            const actualLimit = limit && limit > 0 ? Math.min(limit, 100) : defaultLimit;
 
             const { users, cursor: nextCursor, hasNextPage } = await this.userService.getUsersByProjectIds({
                 projectIds,

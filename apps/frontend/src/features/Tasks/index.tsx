@@ -25,14 +25,13 @@ const initialFilters: TaskFiltersState = {
   assignees: [],
 };
 
-export function Tasks() {
+const Tasks = () => {
   useDocumentTitle("Tasks");
   const allProjectsQuery = useAllProjects();
   const { allProjectUsers: users } = useUsers();
   const [isModalOpen, _setIsModalOpen] = useState(false);
   const [filters, setFilters] = useState<TaskFiltersState>(initialFilters);
 
-  // Convert UI filters to API filters format
   const apiFilters = useMemo(() => {
     const result: {
       search?: string;
@@ -108,9 +107,11 @@ export function Tasks() {
         clearFilters={clearFilters}
       />
 
-      <KanbanBoard />
+      <KanbanBoard filters={apiFilters} />
 
       {isModalOpen && <TaskModal />}
     </div>
   );
 }
+
+export default Tasks;

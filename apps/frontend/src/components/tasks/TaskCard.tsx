@@ -1,4 +1,4 @@
-import type { Task } from "@/state/tasks/types";
+import type { Task } from "@/api/tasks/types";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { PriorityIndicator } from "@/components/common/PriorityIndicator";
 import { Calendar, User } from "lucide-react";

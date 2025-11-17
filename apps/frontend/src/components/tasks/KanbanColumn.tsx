@@ -1,6 +1,7 @@
 import { useDrop } from "react-dnd";
 import { useUpdateTask } from "@/api/tasks/queries";
-import type { Task, TaskStatus } from "@/state";
+import type { TaskStatus } from "@/state";
+import type { Task } from "@/api/tasks/types";
 import { DraggableTaskCard } from "./DraggableTaskCard";
 
 interface KanbanColumnProps {
